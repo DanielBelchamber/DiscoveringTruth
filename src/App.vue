@@ -4,30 +4,47 @@
       <h1>Propositional Logic</h1>
     </header>
     <main>
-      <ArgumentBuilder :assertion="assertion" @submit="validateArgument"></ArgumentBuilder>
-      <p v-if="hasProof" class="congratulations">Your proof is valid!</p>
+      <template v-if="!assertionDelcared">
+        <AssertionCreator @declare="declareAssertion"></AssertionCreator>
+      </template>
+      <template v-else>
+        <ArgumentBuilder :assertion="assertion" @validate="validateArgument"></ArgumentBuilder>
+      </template>
+
+      <template v-if="proofValidated">
+        <p class="congratulations">Your proof is valid!</p>
+      </template>
     </main>
   </div>
 </template>
 
 <script>
-import EXAMPLE_DATA from '@/EXAMPLE_DATA.js'
 import ArgumentBuilder from '@/components/ArgumentBuilder.vue'
+import AssertionCreator from '@/components/AssertionCreator.vue'
 import { validateProof } from '@/models/proofValidator.js'
 
 export default {
   components: {
+    AssertionCreator,
     ArgumentBuilder
   },
   data () {
     return {
-      assertion: EXAMPLE_DATA.assertion,
-      hasProof: false
+      assertion: null,
+      proofValidated: false
+    }
+  },
+  computed: {
+    assertionDelcared () {
+      return this.assertion !== null
     }
   },
   methods: {
+    declareAssertion (assertion) {
+      this.assertion = assertion
+    },
     validateArgument (argument) {
-      this.hasProof = validateProof(this.assertion, argument)
+      this.proofValidated = validateProof(this.assertion, argument)
     }
   }
 }

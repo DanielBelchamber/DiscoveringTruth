@@ -4,7 +4,10 @@
     <article class="argument">
       <ArgumentStep v-for="(step, stepIndex) in argument" :key="stepIndex" :step="step"></ArgumentStep>
     </article>
-    <button v-if="!hasSubmitted" @click="submitArgument">Submit Argument</button>
+
+    <template v-if="!hasSubmitted">
+      <button @click="submitArgument">Submit Argument</button>
+    </template>
   </section>
 </template>
 
@@ -29,7 +32,7 @@ export default {
   },
   methods: {
     submitArgument () {
-      this.$emit('submit', this.argument)
+      this.$emit('validate', this.argument)
       this.hasSubmitted = true
     }
   }

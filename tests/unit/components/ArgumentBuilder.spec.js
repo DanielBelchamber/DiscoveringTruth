@@ -87,7 +87,7 @@ describe('ArgumentBuilder.vue', () => {
 })
 
 describe('methods: submitArgument', () => {
-  it('emits argument', () => {
+  it('emits validate event with argument', () => {
     const wrapper = shallowMount(ArgumentBuilder, {
       data: () => ({
         argument: simpleArgument,
@@ -95,7 +95,7 @@ describe('methods: submitArgument', () => {
       })
     })
     wrapper.vm.submitArgument()
-    expect(wrapper.emitted('submit')[0]).toEqual([simpleArgument])
+    expect(wrapper.emitted('validate')[0]).toEqual([simpleArgument])
   })
 
   it('sets hasSubmitted to true', () => {

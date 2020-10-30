@@ -13,6 +13,13 @@ describe('FormulaSpan.vue', () => {
     expect(span.className).toBe('formula-span')
   })
 
+  it('renders a blank span when given a null formula', () => {
+    const wrapper = mount(FormulaSpan, {
+      propsData: { formula: null }
+    })
+    expect(wrapper.text()).toBe('')
+  })
+
   it('renders formula string with unicode characters', () => {
     const formulaString = 'Q&R>Pv-P'
     const unicodeString = mapToUnicode(formulaString)
