@@ -1,7 +1,6 @@
 import { shallowMount } from '@vue/test-utils'
 import App from '@/App.vue'
 import { constructAssertion, parseFormulaString } from '@/models/formulaParser.js'
-import AssertionHeader from '@/components/AssertionHeader.vue'
 import ArgumentBuilder from '@/components/ArgumentBuilder.vue'
 
 const validAssumptionP = [
@@ -29,9 +28,8 @@ describe('App.vue', () => {
     expect(root.id).toBe('app')
   })
 
-  it('renders AssertionHeader & ArgumentBuilder components', () => {
+  it('renders ArgumentBuilder component', () => {
     const wrapper = shallowMount(App)
-    expect(wrapper.findComponent(AssertionHeader).exists()).toBeTruthy()
     expect(wrapper.findComponent(ArgumentBuilder).exists()).toBeTruthy()
   })
 

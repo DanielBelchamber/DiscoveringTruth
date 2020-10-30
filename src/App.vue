@@ -1,9 +1,10 @@
 <template>
   <div id="app">
-    <h1>Propositional Logic</h1>
+    <header>
+      <h1>Propositional Logic</h1>
+    </header>
     <main>
-      <AssertionHeader :assertion="assertion"></AssertionHeader>
-      <ArgumentBuilder @submit="validateArgument"></ArgumentBuilder>
+      <ArgumentBuilder :assertion="assertion" @submit="validateArgument"></ArgumentBuilder>
       <p v-if="hasProof" class="congratulations">Your proof is valid!</p>
     </main>
   </div>
@@ -11,13 +12,11 @@
 
 <script>
 import EXAMPLE_DATA from '@/EXAMPLE_DATA.js'
-import AssertionHeader from '@/components/AssertionHeader.vue'
 import ArgumentBuilder from '@/components/ArgumentBuilder.vue'
 import { validateProof } from '@/models/proofValidator.js'
 
 export default {
   components: {
-    AssertionHeader,
     ArgumentBuilder
   },
   data () {
@@ -48,6 +47,8 @@ body {
 
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
+  background-color: white;
+  color: black;
   height: inherit;
   width: inherit;
   display: flex;
@@ -58,6 +59,10 @@ body {
   main {
     flex-grow: 1;
     text-align: center;
+  }
+
+  .congratulations {
+    font-size: 20px;
   }
 
   button {

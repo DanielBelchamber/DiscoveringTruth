@@ -1,5 +1,6 @@
 import { shallowMount } from '@vue/test-utils'
 import ArgumentBuilder from '@/components/ArgumentBuilder.vue'
+import AssertionHeader from '@/components/AssertionHeader.vue'
 import ArgumentStep from '@/components/ArgumentStep.vue'
 import { parseFormulaString } from '@/models/formulaParser.js'
 
@@ -34,10 +35,11 @@ const mppArgument = [
 ]
 
 describe('ArgumentBuilder.vue', () => {
-  it('renders ArgumentStep component', () => {
+  it('renders AssertionHeader & ArgumentStep components', () => {
     const wrapper = shallowMount(ArgumentBuilder, {
       data: () => ({ argument: simpleArgument })
     })
+    expect(wrapper.findComponent(AssertionHeader).exists()).toBeTruthy()
     expect(wrapper.findComponent(ArgumentStep).exists()).toBeTruthy()
   })
 

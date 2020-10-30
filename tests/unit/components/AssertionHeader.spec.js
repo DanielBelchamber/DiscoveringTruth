@@ -43,7 +43,7 @@ describe('AssertionHeader.vue', () => {
 describe('computed: assertHtml', () => {
   it('assumptions.length >= 1: returns the assert symbol with double spaces before and after', () => {
     const space = '&nbsp;'
-    const assert = '&#x22A6;'
+    const assert = '\u22A6'
     const assertHtml = `${space}${space}${assert}${space}${space}`
     const localThis = { assertion: constructAssertion(['P>Q', 'P'], 'Q') }
     expect(AssertionHeader.computed.assertHtml.call(localThis)).toBe(assertHtml)
@@ -51,7 +51,7 @@ describe('computed: assertHtml', () => {
 
   it('assumptions.length === 0: returns the assert symbol with double spaces after', () => {
     const space = '&nbsp;'
-    const assert = '&#x22A6;'
+    const assert = '\u22A6'
     const assertHtml = `${assert}${space}${space}`
     const localThis = { assertion: constructAssertion([], 'Q') }
     expect(AssertionHeader.computed.assertHtml.call(localThis)).toBe(assertHtml)
