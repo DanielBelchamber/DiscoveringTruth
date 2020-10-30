@@ -1,6 +1,6 @@
-# Discovering Truth
+# Discovering Truth [Pre-Alpha]
 
-This is a simple prototype for working with basic Propositional Logic proof structures.
+This is a simple app for working with basic Propositional Logic proof structures.
 
 ## Features
 

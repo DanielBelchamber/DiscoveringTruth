@@ -46,4 +46,9 @@ describe('computed: formulaHtml', () => {
     const localThis = { formula: parseFormulaString(formulaString) }
     expect(FormulaSpan.computed.formulaHtml.call(localThis)).toBe(htmlString)
   })
+
+  it('returns an empty string when formula is null', () => {
+    const localThis = { formula: null }
+    expect(FormulaSpan.computed.formulaHtml.call(localThis)).toBe('')
+  })
 })
