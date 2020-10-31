@@ -1,8 +1,5 @@
 <template>
   <div id="app">
-    <header>
-      <h1>Propositional Logic</h1>
-    </header>
     <main>
       <template v-if="!assertionDelcared">
         <AssertionCreator @declare="declareAssertion"></AssertionCreator>
@@ -81,6 +78,7 @@ body {
   justify-content: center;
 
   main {
+    min-width: 320px;
     flex-grow: 1;
     text-align: center;
   }

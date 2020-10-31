@@ -8,11 +8,13 @@ const FORMULA_TYPE = Object.freeze({
   IMPLICATION: 'Implication'
 })
 
-const isValidAssumption = step => {
+// TODO: Throw errors instead of returning false
+const validateAssumption = step => {
   return step.dependencies.length === 1 && step.dependencies[0] === step.line
 }
 
-const isValidMPP = (step, implicationStep, antecedentStep) => {
+// TODO: Throw errors instead of returning false
+const validateMPP = (step, implicationStep, antecedentStep) => {
   // validate the formula relationships
   const implication = implicationStep.formula
   if (implication.type !== FORMULA_TYPE.IMPLICATION) return false
@@ -35,16 +37,20 @@ const isValidMPP = (step, implicationStep, antecedentStep) => {
   )
 }
 
-const DERIVATION_RULES = [
+export const DERIVATION_RULES = [
   {
     name: 'Rule of Assumptions (A)',
+    type: 'A',
+    getNotation: () => 'A',
     matchNotation: notation => notation === 'A',
-    validate: isValidAssumption
+    validate: validateAssumption
   },
   {
     name: 'Modus Ponendo Ponens (MPP)',
+    type: 'MPP',
+    getNotation: (impLine, antLine) => `${impLine},${antLine} MPP`,
     matchNotation: notation => notation.match(/^\d+(,)\d+( MPP)$/),
-    validate: isValidMPP
+    validate: validateMPP
   }
 ]
 
