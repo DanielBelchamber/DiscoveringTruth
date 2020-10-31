@@ -1,18 +1,29 @@
 <template>
-  <div class="argument-builder">
-    <div class="argument-container">
+  <section class="argument-builder">
+    <AssertionHeader :assertion="assertion"></AssertionHeader>
+    <article class="argument">
       <ArgumentStep v-for="(step, stepIndex) in argument" :key="stepIndex" :step="step"></ArgumentStep>
-    </div>
-    <button v-if="!hasSubmitted" @click="submitArgument">Submit Argument</button>
-  </div>
+    </article>
+
+    <template v-if="!hasSubmitted">
+      <button @click="submitArgument">Submit Argument</button>
+    </template>
+  </section>
 </template>
 
 <script>
 import EXAMPLE_DATA from '@/EXAMPLE_DATA.js'
+import AssertionHeader from '@/components/AssertionHeader.vue'
 import ArgumentStep from '@/components/ArgumentStep.vue'
 
 export default {
-  components: { ArgumentStep },
+  components: {
+    AssertionHeader,
+    ArgumentStep
+  },
+  props: {
+    assertion: Object
+  },
   data () {
     return {
       argument: EXAMPLE_DATA.argument,
@@ -21,7 +32,7 @@ export default {
   },
   methods: {
     submitArgument () {
-      this.$emit('submit', this.argument)
+      this.$emit('validate', this.argument)
       this.hasSubmitted = true
     }
   }

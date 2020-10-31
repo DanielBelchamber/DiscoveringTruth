@@ -1,5 +1,6 @@
 import { shallowMount } from '@vue/test-utils'
 import ArgumentBuilder from '@/components/ArgumentBuilder.vue'
+import AssertionHeader from '@/components/AssertionHeader.vue'
 import ArgumentStep from '@/components/ArgumentStep.vue'
 import { parseFormulaString } from '@/models/formulaParser.js'
 
@@ -34,10 +35,11 @@ const mppArgument = [
 ]
 
 describe('ArgumentBuilder.vue', () => {
-  it('renders ArgumentStep component', () => {
+  it('renders AssertionHeader & ArgumentStep components', () => {
     const wrapper = shallowMount(ArgumentBuilder, {
       data: () => ({ argument: simpleArgument })
     })
+    expect(wrapper.findComponent(AssertionHeader).exists()).toBeTruthy()
     expect(wrapper.findComponent(ArgumentStep).exists()).toBeTruthy()
   })
 
@@ -85,7 +87,7 @@ describe('ArgumentBuilder.vue', () => {
 })
 
 describe('methods: submitArgument', () => {
-  it('emits argument', () => {
+  it('emits validate event with argument', () => {
     const wrapper = shallowMount(ArgumentBuilder, {
       data: () => ({
         argument: simpleArgument,
@@ -93,7 +95,7 @@ describe('methods: submitArgument', () => {
       })
     })
     wrapper.vm.submitArgument()
-    expect(wrapper.emitted('submit')[0]).toEqual([simpleArgument])
+    expect(wrapper.emitted('validate')[0]).toEqual([simpleArgument])
   })
 
   it('sets hasSubmitted to true', () => {
