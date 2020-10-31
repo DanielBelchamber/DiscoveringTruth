@@ -1,11 +1,16 @@
 <template>
   <h2 class="assertion-header">
-    <template v-for="(assumption, index) in assertion.assumptionList">
-      <FormulaSpan :key="index" class="assumption" :formula="assumption"></FormulaSpan>
-      <span v-if="!isLastAssumption(index)" :key="index + ','" class="comma">,&nbsp;</span>
+    <template v-if="!hasConclusion">
+      <span class="placeholder">Declare Assertion</span>
     </template>
-    <span class="assert" v-html="assertHtml"></span>
-    <FormulaSpan class="conclusion" :formula="assertion.conclusion"></FormulaSpan>
+    <template v-else>
+      <template v-for="(assumption, index) in assertion.assumptionList">
+        <FormulaSpan :key="index" class="assumption" :formula="assumption"></FormulaSpan>
+        <span v-if="!isLastAssumption(index)" :key="index + ','" class="comma">,&nbsp;</span>
+      </template>
+      <span class="assert" v-html="assertHtml"></span>
+      <FormulaSpan class="conclusion" :formula="assertion.conclusion"></FormulaSpan>
+    </template>
   </h2>
 </template>
 
@@ -20,6 +25,9 @@ export default {
     assertion: Object
   },
   computed: {
+    hasConclusion () {
+      return this.assertion.conclusion !== null
+    },
     assertHtml () {
       const space = '&nbsp;'
       const assert = '\u22A6'
@@ -40,8 +48,11 @@ export default {
 
 <style lang="scss" scoped>
 .assertion-header {
-  display: inline-block;
   padding: 2px 8px;
   border-bottom: 2px solid black;
+
+  .placeholder {
+    color: #a6a6a6;
+  }
 }
 </style>

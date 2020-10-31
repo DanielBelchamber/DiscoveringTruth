@@ -11,8 +11,9 @@
         <ArgumentBuilder :assertion="assertion" @validate="validateArgument"></ArgumentBuilder>
       </template>
 
-      <template v-if="proofValidated">
-        <p class="congratulations">Your proof is valid!</p>
+      <template v-if="argumentGiven">
+        <p v-if="proofValidated" class="congratulations">Your proof is valid!</p>
+        <p v-else class="invalid">Your proof is invalid.</p>
       </template>
     </main>
   </div>
@@ -31,6 +32,7 @@ export default {
   data () {
     return {
       assertion: null,
+      argumentGiven: false,
       proofValidated: false
     }
   },
@@ -44,7 +46,12 @@ export default {
       this.assertion = assertion
     },
     validateArgument (argument) {
-      this.proofValidated = validateProof(this.assertion, argument)
+      this.argumentGiven = true
+      try {
+        this.proofValidated = validateProof(this.assertion, argument)
+      } catch (error) {
+        this.proofValidated = false
+      }
     }
   }
 }
@@ -78,12 +85,20 @@ body {
     text-align: center;
   }
 
-  .congratulations {
+  .congratulations, .invalid {
     font-size: 20px;
   }
 
-  button {
-    cursor: pointer;
+  .congratulations {
+    color: #4baf4f;
   }
+
+  .invalid {
+    color: #ff5252;
+  }
+}
+
+button {
+  cursor: pointer;
 }
 </style>
