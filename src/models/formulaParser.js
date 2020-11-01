@@ -40,7 +40,7 @@ const analyzeFormulaString = (formulaString, elementList) => {
   })
   // Once all SUBSTITUTION_RULES have been executed, the result should be a single index reference
   if (isNaN(referenceString)) {
-    // NOTE: This does not catch ambiguity errors (see constructFormula)
+    // This does not catch ambiguity errors (see constructFormula)
     throw new SyntaxError(`Formula is not well-formed: ${formulaString}`)
   }
   return {

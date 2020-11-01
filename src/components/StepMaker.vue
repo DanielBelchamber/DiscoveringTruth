@@ -30,8 +30,7 @@ export default {
   },
   data () {
     return {
-      formulaString: '',
-      referenceList: this.getReferenceList(this.rule.type)
+      formulaString: ''
     }
   },
   computed: {
@@ -42,12 +41,8 @@ export default {
         return null
       }
     },
-    isWellFormed () {
-      return this.formula !== null
-    }
-  },
-  methods: {
-    getReferenceList (ruleType) {
+    referenceList () {
+      const ruleType = this.rule.type
       switch (ruleType) {
         case 'MPP':
           return [
@@ -59,6 +54,11 @@ export default {
           return []
       }
     },
+    isWellFormed () {
+      return this.formula !== null
+    }
+  },
+  methods: {
     commit () {
       const stepNumber = this.argument.length + 1
       const step = {
@@ -92,13 +92,6 @@ export default {
           break
       }
       this.$emit('commit', step)
-    }
-  },
-  watch: {
-    'rule.type': {
-      handler (newType) {
-        this.referenceList = this.getReferenceList(newType)
-      }
     }
   }
 }
