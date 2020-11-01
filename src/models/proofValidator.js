@@ -8,20 +8,27 @@ const FORMULA_TYPE = Object.freeze({
   IMPLICATION: 'Implication'
 })
 
-// TODO: Throw errors instead of returning false
 const validateAssumption = step => {
-  return step.dependencies.length === 1 && step.dependencies[0] === step.line
+  if (step.dependencies.length !== 1 || step.dependencies[0] !== step.line) {
+    throw new Error('Assumption Step must rely on only itself.')
+  } else {
+    return true
+  }
 }
 
-// TODO: Throw errors instead of returning false
 const validateMPP = (step, implicationStep, antecedentStep) => {
   // validate the formula relationships
   const implication = implicationStep.formula
-  if (implication.type !== FORMULA_TYPE.IMPLICATION) return false
+  if (implication.type !== FORMULA_TYPE.IMPLICATION) {
+    throw new Error('First reference is not an implication.')
+  }
   const antecedent = parseFormulaString(implication.left.toString())
   const consequent = parseFormulaString(implication.right.toString())
-  if (antecedentStep.formula.toString() !== antecedent.toString()) return false
-  if (step.formula.toString() !== consequent.toString()) return false
+  if (antecedentStep.formula.toString() !== antecedent.toString()) {
+    throw new Error('Second reference is not the antecedent of the first.')
+  } else if (step.formula.toString() !== consequent.toString()) {
+    throw new Error('Step is not the consequent of the implecation.')
+  }
 
   // validate dependency chain
   const dependencies = step.dependencies
@@ -30,11 +37,15 @@ const validateMPP = (step, implicationStep, antecedentStep) => {
     ...antecedentStep.dependencies
   ])
   const missingReferenceSet = new Set(dependencies.filter(a => !referenceDependencySet.has(a)))
-  return (
-    dependencies.length === referenceDependencySet.size &&
-    missingReferenceSet.size === 0 &&
-    dependencies.join(',') === [...dependencies].sort().join()
-  )
+  if (
+    dependencies.length !== referenceDependencySet.size ||
+    missingReferenceSet.size !== 0 ||
+    dependencies.join(',') !== [...dependencies].sort().join()
+  ) {
+    throw new Error('Dependencies are incorrect.')
+  } else {
+    return true
+  }
 }
 
 export const DERIVATION_RULES = [
@@ -82,12 +93,12 @@ export const validateProof = (assertion, argument) => {
     const rule = DERIVATION_RULES.find(r => r.matchNotation(step.notation))
     if (rule.name === 'Rule of Assumptions (A)') {
       // Assumption steps only reference themselves
-      if (!rule.validate(step)) return false
+      rule.validate(step)
     } else {
       // All others must ensure they have proper references
       const lines = step.notation.match(/\d+/g)
       const steps = lines.map(l => argument[l - 1])
-      if (!rule.validate(step, ...steps)) return false
+      rule.validate(step, ...steps)
     }
   }
   return true

@@ -5,7 +5,7 @@
       <ArgumentStep v-for="(step, stepIndex) in argument" :key="stepIndex" :step="step"></ArgumentStep>
     </article>
 
-    <template v-if="addingStep">
+    <template v-if="!hasSubmitted && addingStep">
       <select class="rule" v-model="rule">
         <option disabled :value="null">Choose Derivation Rule</option>
         <option
@@ -19,7 +19,7 @@
       </select>
       <button @click="cancel">Cancel</button>
       <template v-if="rule">
-        <StepEditor :argument="argument" :rule="rule" @commit="commitStep"></StepEditor>
+        <StepMaker :argument="argument" :rule="rule" @commit="commitStep"></StepMaker>
       </template>
     </template>
 
@@ -33,14 +33,14 @@
 <script>
 import AssertionHeader from '@/components/AssertionHeader.vue'
 import ArgumentStep from '@/components/ArgumentStep.vue'
-import StepEditor from '@/components/StepEditor.vue'
+import StepMaker from '@/components/StepMaker.vue'
 import { DERIVATION_RULES } from '@/models/proofValidator.js'
 
 export default {
   components: {
     AssertionHeader,
     ArgumentStep,
-    StepEditor
+    StepMaker
   },
   props: {
     assertion: Object
@@ -61,12 +61,12 @@ export default {
     isAssumptionOrNotFirst (ruleType) {
       return ruleType === 'A' || this.argument.length > 0
     },
-    commitStep (step) {
-      this.argument.push(step)
+    cancel () {
       this.addingStep = false
       this.rule = null
     },
-    cancel () {
+    commitStep (step) {
+      this.argument.push(step)
       this.addingStep = false
       this.rule = null
     },

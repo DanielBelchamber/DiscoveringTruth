@@ -2,7 +2,9 @@ import { shallowMount } from '@vue/test-utils'
 import ArgumentBuilder from '@/components/ArgumentBuilder.vue'
 import AssertionHeader from '@/components/AssertionHeader.vue'
 import ArgumentStep from '@/components/ArgumentStep.vue'
+import StepMaker from '@/components/StepMaker.vue'
 import { parseFormulaString } from '@/models/formulaParser.js'
+import { DERIVATION_RULES } from '@/models/proofValidator.js'
 
 const simpleArgument = [
   {
@@ -50,19 +52,93 @@ describe('ArgumentBuilder.vue', () => {
     expect(wrapper.findAllComponents(ArgumentStep).length).toBe(3)
   })
 
-  it('conditionally renders submit button', () => {
+  it('conditionally renders rule select and Cancel button', () => {
+    const wrapper = shallowMount(ArgumentBuilder, {
+      data: () => ({ hasSubmitted: false, addingStep: true })
+    })
+    // select.rule
+    const select = wrapper.find('select.rule')
+    expect(select.exists()).toBeTruthy()
+    const options = select.findAll('option')
+    const defaultOption = options.at(0)
+    expect(defaultOption.attributes('disabled')).toBeTruthy()
+    expect(defaultOption.element.value).toBe('')
+    expect(defaultOption.text()).toBe('Choose Derivation Rule')
+    const aOption = options.at(1)
+    expect(aOption.attributes('disabled')).toBeFalsy()
+    expect(aOption.text()).toBe(DERIVATION_RULES[0].name)
+    const mppOption = options.at(2)
+    expect(mppOption.attributes('disabled')).toBeTruthy()
+    expect(mppOption.text()).toBe(DERIVATION_RULES[1].name)
+    // cancel button
+    const cancelButton = wrapper.find('button')
+    expect(cancelButton.exists()).toBeTruthy()
+    expect(cancelButton.text()).toBe('Cancel')
+  })
+
+  it('calls isAssumptionOrNotFirst for each derivation rule', () => {
+    const isAssumptionOrNotFirst = jest.spyOn(ArgumentBuilder.methods, 'isAssumptionOrNotFirst')
+    shallowMount(ArgumentBuilder, {
+      data: () => ({ hasSubmitted: false, addingStep: true })
+    })
+    expect(isAssumptionOrNotFirst).toBeCalledTimes(DERIVATION_RULES.length)
+  })
+
+  it('selecting dropdown updates rule', () => {
+    const wrapper = shallowMount(ArgumentBuilder, {
+      data: () => ({
+        rule: null,
+        hasSubmitted: false,
+        addingStep: true
+      })
+    })
+    const options = wrapper.findAll('select.rule option')
+    options.at(1).setSelected()
+    const selectedOption = wrapper.find('select.rule option:checked')
+    expect(selectedOption.text()).toBe(DERIVATION_RULES[0].name)
+  })
+
+  it('triggers cancel on Cancel button click', () => {
+    const cancel = jest.spyOn(ArgumentBuilder.methods, 'cancel')
+    const wrapper = shallowMount(ArgumentBuilder, {
+      data: () => ({
+        hasSubmitted: false,
+        addingStep: true
+      })
+    })
+    wrapper.find('button').trigger('click')
+    expect(cancel).toBeCalled()
+  })
+
+  it('conditionally renders StepMaker', () => {
+    const wrapper = shallowMount(ArgumentBuilder, {
+      data: () => ({
+        rule: DERIVATION_RULES[0],
+        hasSubmitted: false,
+        addingStep: true
+      })
+    })
+    expect(wrapper.findComponent(StepMaker).exists()).toBeTruthy()
+  })
+
+  it('conditionally renders Add Step and Submit Argument buttons', () => {
     const wrapper = shallowMount(ArgumentBuilder, {
       data: () => ({
         argument: [],
-        hasSubmitted: false
+        hasSubmitted: false,
+        addingStep: false
       })
     })
-    const button = wrapper.find('button')
-    expect(button.exists()).toBeTruthy()
-    expect(button.text()).toBe('Submit Argument')
+    const buttons = wrapper.findAll('button')
+    const atButton = buttons.at(0)
+    expect(atButton.exists()).toBeTruthy()
+    expect(atButton.text()).toBe('Add Step')
+    const submitButton = buttons.at(1)
+    expect(submitButton.exists()).toBeTruthy()
+    expect(submitButton.text()).toBe('Submit Argument')
   })
 
-  it('conditionally does not render submit button', () => {
+  it('conditionally does not render Add Step and Submit Argument buttons', () => {
     const wrapper = shallowMount(ArgumentBuilder, {
       data: () => ({
         argument: [],
@@ -72,7 +148,20 @@ describe('ArgumentBuilder.vue', () => {
     expect(wrapper.find('button').exists()).toBeFalsy()
   })
 
-  it('triggers submitArgument on button click', () => {
+  it('triggers addStep on Add Step button click', () => {
+    const addStep = jest.spyOn(ArgumentBuilder.methods, 'addStep')
+    const wrapper = shallowMount(ArgumentBuilder, {
+      data: () => ({
+        argument: simpleArgument,
+        hasSubmitted: false
+      })
+    })
+    const addButton = wrapper.findAll('button').at(0)
+    addButton.trigger('click')
+    expect(addStep).toBeCalled()
+  })
+
+  it('triggers submitArgument on Submit Argument button click', () => {
     const submitArgument = jest.spyOn(ArgumentBuilder.methods, 'submitArgument')
     const wrapper = shallowMount(ArgumentBuilder, {
       data: () => ({
@@ -80,10 +169,26 @@ describe('ArgumentBuilder.vue', () => {
         hasSubmitted: false
       })
     })
-    const button = wrapper.find('button')
-    button.trigger('click')
+    const submitButton = wrapper.findAll('button').at(1)
+    submitButton.trigger('click')
     expect(submitArgument).toBeCalled()
   })
+})
+
+describe('methods: addStep', () => {
+  it.todo('write tests')
+})
+
+describe('methods: isAssumptionOrNotFirst', () => {
+  it.todo('write tests')
+})
+
+describe('methods: cancel', () => {
+  it.todo('write tests')
+})
+
+describe('methods: commitStep', () => {
+  it.todo('write tests')
 })
 
 describe('methods: submitArgument', () => {
