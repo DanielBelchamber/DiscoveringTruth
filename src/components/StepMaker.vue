@@ -1,8 +1,8 @@
 <template>
   <form @submit.prevent="commit">
     <p class="formula">
-      <label for="assumption">Formula:</label>
-      <input type="text" id="assumption" v-model="formulaString"/>
+      <label for="formula">Formula:</label>
+      <input type="text" id="formula" v-model="formulaString"/>
     </p>
 
     <p v-for="(reference, index) in referenceList" class="reference" :key="index">
@@ -16,7 +16,7 @@
       />
     </p>
 
-    <input type="submit" :disabled="!isWellFormed" value="Commit Step"/>
+    <input type="submit" :disabled="formula === null" value="Commit Step"/>
   </form>
 </template>
 
@@ -53,9 +53,6 @@ export default {
         default:
           return []
       }
-    },
-    isWellFormed () {
-      return this.formula !== null
     }
   },
   methods: {
@@ -75,19 +72,10 @@ export default {
           break
         case 'MPP':
         default:
-          references = this.referenceList.map(r => r.value)
-          step.dependencies = references
-            .map(reference => {
-              const step = argument[reference - 1]
-              return [...step.dependencies]
-            })
-            .reduce((refList, depList) => {
-              depList.forEach(d => {
-                if (refList.indexOf(d) === -1) refList.push(d)
-              })
-              return refList
-            })
-            .sort()
+          references = this.referenceList
+            .map(r => [...argument[r.value - 1].dependencies])
+            .flat()
+          step.dependencies = [...new Set(references)].sort()
           step.notation = rule.getNotation(...references)
           break
       }

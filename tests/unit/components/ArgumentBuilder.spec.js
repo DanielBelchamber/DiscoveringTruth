@@ -121,6 +121,25 @@ describe('ArgumentBuilder.vue', () => {
     expect(wrapper.findComponent(StepMaker).exists()).toBeTruthy()
   })
 
+  it('calls commitStep on StepMaker commit event', () => {
+    const commitStep = jest.spyOn(ArgumentBuilder.methods, 'commitStep')
+    const wrapper = shallowMount(ArgumentBuilder, {
+      data: () => ({
+        rule: DERIVATION_RULES[0],
+        hasSubmitted: false,
+        addingStep: true
+      })
+    })
+    const step = {
+      dependencies: [1],
+      line: 1,
+      formula: parseFormulaString('P'),
+      notation: 'A'
+    }
+    wrapper.findComponent(StepMaker).vm.$emit('commit', step)
+    expect(commitStep).toBeCalledWith(step)
+  })
+
   it('conditionally renders Add Step and Submit Argument buttons', () => {
     const wrapper = shallowMount(ArgumentBuilder, {
       data: () => ({
@@ -176,19 +195,84 @@ describe('ArgumentBuilder.vue', () => {
 })
 
 describe('methods: addStep', () => {
-  it.todo('write tests')
+  it('sets addingStep to true', () => {
+    const wrapper = shallowMount(ArgumentBuilder, {
+      data: () => ({
+        hasSubmitted: false,
+        addingStep: false
+      })
+    })
+    wrapper.vm.addStep()
+    expect(wrapper.vm.$data.addingStep).toBeTruthy()
+  })
 })
 
 describe('methods: isAssumptionOrNotFirst', () => {
-  it.todo('write tests')
+  it('returns true for first assumption', () => {
+    const wrapper = shallowMount(ArgumentBuilder, {
+      data: () => ({ argument: [] })
+    })
+    expect(wrapper.vm.isAssumptionOrNotFirst('A')).toBeTruthy()
+  })
+
+  it('returns false for first non-assumption', () => {
+    const wrapper = shallowMount(ArgumentBuilder, {
+      data: () => ({ argument: [] })
+    })
+    expect(wrapper.vm.isAssumptionOrNotFirst('MPP')).toBeFalsy()
+  })
+
+  it('returns true for rule after first', () => {
+    const wrapper = shallowMount(ArgumentBuilder, {
+      data: () => ({
+        argument: [{
+          dependencies: [1],
+          line: 1,
+          formula: parseFormulaString('P'),
+          notation: 'A'
+        }]
+      })
+    })
+    expect(wrapper.vm.isAssumptionOrNotFirst('MPP')).toBeTruthy()
+  })
 })
 
 describe('methods: cancel', () => {
-  it.todo('write tests')
+  it('resets addingStep and rule', () => {
+    const wrapper = shallowMount(ArgumentBuilder, {
+      data: () => ({
+        rule: DERIVATION_RULES[1],
+        hasSubmitted: false,
+        addingStep: true
+      })
+    })
+    wrapper.vm.cancel()
+    expect(wrapper.vm.$data.rule).toBe(null)
+    expect(wrapper.vm.$data.addingStep).toBeFalsy()
+  })
 })
 
 describe('methods: commitStep', () => {
-  it.todo('write tests')
+  it('adds step to argument', () => {
+    const step = {
+      dependencies: [1],
+      line: 1,
+      formula: parseFormulaString('P'),
+      notation: 'A'
+    }
+    const wrapper = shallowMount(ArgumentBuilder, {
+      data: () => ({
+        argument: [],
+        rule: DERIVATION_RULES[0],
+        hasSubmitted: false,
+        addingStep: true
+      })
+    })
+    wrapper.vm.commitStep(step)
+    expect(wrapper.vm.$data.argument).toEqual([step])
+    expect(wrapper.vm.$data.rule).toBe(null)
+    expect(wrapper.vm.$data.addingStep).toBeFalsy()
+  })
 })
 
 describe('methods: submitArgument', () => {
