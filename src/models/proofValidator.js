@@ -22,11 +22,11 @@ const validateMPP = (step, implicationStep, antecedentStep) => {
   if (implication.type !== FORMULA_TYPE.IMPLICATION) {
     throw new Error('First reference is not an implication.')
   }
-  const antecedent = parseFormulaString(implication.left.toString())
-  const consequent = parseFormulaString(implication.right.toString())
-  if (antecedentStep.formula.toString() !== antecedent.toString()) {
+  const antecedent = parseFormulaString(implication.left.string)
+  const consequent = parseFormulaString(implication.right.string)
+  if (antecedentStep.formula.string !== antecedent.string) {
     throw new Error('Second reference is not the antecedent of the first.')
-  } else if (step.formula.toString() !== consequent.toString()) {
+  } else if (step.formula.string !== consequent.string) {
     throw new Error('Step is not the consequent of the implecation.')
   }
 
@@ -67,12 +67,12 @@ export const DERIVATION_RULES = [
 
 const isConclusionAssertive = (assertion, argument) => {
   const conclusionStep = argument[argument.length - 1]
-  if (assertion.conclusion.toString() !== conclusionStep.formula.toString()) return false
+  if (assertion.conclusion.string !== conclusionStep.formula.string) return false
   const steps = conclusionStep.dependencies.map(l => argument[l - 1])
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]
-    const formulaString = step.formula.toString()
-    if (!assertion.assumptionList.find(a => a.toString() === formulaString)) return false
+    const formulaString = step.formula.string
+    if (!assertion.assumptionList.find(a => a.string === formulaString)) return false
   }
   return true
 }

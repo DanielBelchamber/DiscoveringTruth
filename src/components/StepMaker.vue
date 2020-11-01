@@ -62,9 +62,9 @@ export default {
         line: stepNumber,
         formula: this.formula
       }
-      let references
       const rule = this.rule
       const argument = this.argument
+      let referenceNumbers
       switch (rule.type) {
         case 'A':
           step.dependencies = [stepNumber]
@@ -72,11 +72,15 @@ export default {
           break
         case 'MPP':
         default:
-          references = this.referenceList
-            .map(r => [...argument[r.value - 1].dependencies])
-            .flat()
-          step.dependencies = [...new Set(references)].sort()
-          step.notation = rule.getNotation(...references)
+          referenceNumbers = this.referenceList.map(r => r.value)
+          step.notation = rule.getNotation(...referenceNumbers)
+          step.dependencies = [
+            ...new Set(
+              referenceNumbers
+                .map(r => [...argument[r - 1].dependencies])
+                .flat()
+            )
+          ].sort()
           break
       }
       this.$emit('commit', step)

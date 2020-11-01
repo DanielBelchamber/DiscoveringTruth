@@ -90,7 +90,7 @@ describe('StepMaker.vue', () => {
 describe('computed: formula', () => {
   it('returns parsed formula when string is well-formed', () => {
     const localThis = { formulaString: '(P>(P>Q))' }
-    expect(StepMaker.computed.formula.call(localThis).toString()).toBe('P>(P>Q)')
+    expect(StepMaker.computed.formula.call(localThis).string).toBe('P>(P>Q)')
   })
 
   it('returns null when string is not well-formed', () => {
@@ -124,8 +124,14 @@ describe('methods: commit', () => {
       },
       data: () => ({ formulaString: 'P>Q' })
     })
+    const aStep = {
+      dependencies: [1],
+      line: 1,
+      formula: parseFormulaString('P>Q'),
+      notation: 'A'
+    }
     wrapper.vm.commit()
-    expect(wrapper.emitted('commit')[0].length).toBe(1)
+    expect(wrapper.emitted('commit')[0]).toEqual([aStep])
   })
 
   it('emits MPP step', () => {
@@ -156,9 +162,15 @@ describe('methods: commit', () => {
       },
       data: () => ({ formulaString: 'Q' })
     })
+    const mppStep = {
+      dependencies: [1, 2],
+      line: 4,
+      formula: parseFormulaString('Q'),
+      notation: '3,2 MPP'
+    }
     wrapper.find('input#implication').setValue(3)
     wrapper.find('input#antecedent').setValue(2)
     wrapper.vm.commit()
-    expect(wrapper.emitted('commit')[0].length).toBe(1)
+    expect(wrapper.emitted('commit')[0]).toEqual([mppStep])
   })
 })

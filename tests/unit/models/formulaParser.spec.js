@@ -6,7 +6,7 @@ describe('parseFormulaString', () => {
     const formula = parseFormulaString(formulaString)
     expect(formula.type).toBe('Proposition')
     expect(formula.hasParentheses).toBeFalsy()
-    expect(formula.toString()).toBe('P')
+    expect(formula.string).toBe('P')
   })
 
   it('removes multiple parentheses from a Proposition', () => {
@@ -14,7 +14,7 @@ describe('parseFormulaString', () => {
     const formula = parseFormulaString(formulaString)
     expect(formula.type).toBe('Proposition')
     expect(formula.hasParentheses).toBeFalsy()
-    expect(formula.toString()).toBe('P')
+    expect(formula.string).toBe('P')
   })
 
   it('can parse a simple Negation', () => {
@@ -22,7 +22,7 @@ describe('parseFormulaString', () => {
     const formula = parseFormulaString(formulaString)
     expect(formula.type).toBe('Negation')
     expect(formula.hasParentheses).toBeFalsy()
-    expect(formula.toString()).toBe('-R')
+    expect(formula.string).toBe('-R')
   })
 
   it('can parse a simple Conjunction', () => {
@@ -30,7 +30,7 @@ describe('parseFormulaString', () => {
     const formula = parseFormulaString(formulaString)
     expect(formula.type).toBe('Conjunction')
     expect(formula.hasParentheses).toBeFalsy()
-    expect(formula.toString()).toBe('P&Q')
+    expect(formula.string).toBe('P&Q')
   })
 
   it('can parse a simple Disjunction', () => {
@@ -38,7 +38,7 @@ describe('parseFormulaString', () => {
     const formula = parseFormulaString(formulaString)
     expect(formula.type).toBe('Disjunction')
     expect(formula.hasParentheses).toBeFalsy()
-    expect(formula.toString()).toBe('PvQ')
+    expect(formula.string).toBe('PvQ')
   })
 
   it('can parse a simple Implication', () => {
@@ -46,7 +46,7 @@ describe('parseFormulaString', () => {
     const formula = parseFormulaString(formulaString)
     expect(formula.type).toBe('Implication')
     expect(formula.hasParentheses).toBeFalsy()
-    expect(formula.toString()).toBe('P>Q')
+    expect(formula.string).toBe('P>Q')
   })
 
   it('keeps necessary parentheses', () => {
@@ -55,7 +55,7 @@ describe('parseFormulaString', () => {
     expect(formula.type).toBe('Implication')
     expect(formula.hasParentheses).toBeFalsy()
     expect(formula.right.hasParentheses).toBeTruthy()
-    expect(formula.toString()).toBe('P>(P>Q)')
+    expect(formula.string).toBe('P>(P>Q)')
   })
 
   it('parses a complex formula string', () => {
@@ -64,7 +64,7 @@ describe('parseFormulaString', () => {
     expect(formula.type).toBe('Implication')
     expect(formula.left.type).toBe('Conjunction')
     expect(formula.right.type).toBe('Conjunction')
-    expect(formula.toString()).toBe('(P>Q)&(-PvP)>Q&-(-SvP>Q)')
+    expect(formula.string).toBe('(P>Q)&(-PvP)>Q&-(-SvP>Q)')
   })
 
   it('can detect a syntax error', () => {
@@ -95,15 +95,15 @@ describe('constructAssertion', () => {
     const assertion = constructAssertion([assumption0, assumption1], conclusion)
 
     // assumption0
-    expect(assertion.assumptionList[0].toString()).toBe(assumption0)
+    expect(assertion.assumptionList[0].string).toBe(assumption0)
     expect(assertion.assumptionList[0].type).toBe('Implication')
     expect(assertion.assumptionList[0].right.hasParentheses).toBeTruthy()
     expect(assertion.assumptionList[0].right.type).toBe('Implication')
     // assumption1
-    expect(assertion.assumptionList[1].toString()).toBe(assumption1)
+    expect(assertion.assumptionList[1].string).toBe(assumption1)
     expect(assertion.assumptionList[1].type).toBe('Proposition')
     // conclusion
-    expect(assertion.conclusion.toString()).toBe(conclusion)
+    expect(assertion.conclusion.string).toBe(conclusion)
     expect(assertion.conclusion.type).toBe('Proposition')
   })
 })
