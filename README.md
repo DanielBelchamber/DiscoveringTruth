@@ -4,7 +4,12 @@ This is a simple app for working with basic Propositional Logic proof structures
 
 ## Features
 
-- Parsing Formula Strings
-- Assertion Creator Interface
-- Displaying Assertions and Arguments
-- Validating Arguments
+- Parse Formula Strings
+- Create and Declare Assertions
+- Build Formal Arguments with Derivation Rules
+- Prove Assertions with Formal Arguments
+
+### Derivation Rules
+
+- Rule of Assumptions (A)
+- Modus Ponendo Ponens (MPP)

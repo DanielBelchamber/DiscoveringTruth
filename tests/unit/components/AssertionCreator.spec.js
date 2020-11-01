@@ -126,9 +126,9 @@ describe('computed: assertion', () => {
     }
     const assertion = constructAssertion(['P', 'R>Q'], 'S')
     const computed = AssertionCreator.computed.assertion.call(localThis)
-    expect(computed.assumptionList[0].toString()).toEqual(assertion.assumptionList[0].toString())
-    expect(computed.assumptionList[1].toString()).toEqual(assertion.assumptionList[1].toString())
-    expect(computed.conclusion.toString()).toEqual(assertion.conclusion.toString())
+    expect(computed.assumptionList[0].string).toEqual(assertion.assumptionList[0].string)
+    expect(computed.assumptionList[1].string).toEqual(assertion.assumptionList[1].string)
+    expect(computed.conclusion.string).toEqual(assertion.conclusion.string)
   })
 
   it('returns a skeleton object after catching a parsing error', () => {

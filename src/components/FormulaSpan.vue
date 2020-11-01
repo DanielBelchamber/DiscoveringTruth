@@ -12,7 +12,7 @@ export default {
   computed: {
     formulaHtml () {
       if (this.formula === null) return ''
-      const formulaString = this.formula.toString()
+      const formulaString = this.formula.string
       return mapToHtml(formulaString)
     }
   }

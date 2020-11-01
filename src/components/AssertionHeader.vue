@@ -1,5 +1,5 @@
 <template>
-  <h2 class="assertion-header">
+  <h1 class="assertion-header">
     <template v-if="!hasConclusion">
       <span class="placeholder">Declare Assertion</span>
     </template>
@@ -11,7 +11,7 @@
       <span class="assert" v-html="assertHtml"></span>
       <FormulaSpan class="conclusion" :formula="assertion.conclusion"></FormulaSpan>
     </template>
-  </h2>
+  </h1>
 </template>
 
 <script>
