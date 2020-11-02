@@ -16,7 +16,7 @@ const validateAssumption = step => {
   }
 }
 
-const validateDependencies = (dependencies, referenceDependencySet) => {
+const validateDependencyChain = (dependencies, referenceDependencySet) => {
   const missingReferenceSet = new Set(dependencies.filter(a => !referenceDependencySet.has(a)))
   if (
     dependencies.length !== referenceDependencySet.size ||
@@ -48,7 +48,7 @@ const validateMPP = (step, impStep, antStep) => {
     ...impStep.dependencies,
     ...antStep.dependencies
   ])
-  return validateDependencies(step.dependencies, referenceDependencySet)
+  return validateDependencyChain(step.dependencies, referenceDependencySet)
 }
 
 const validateMTT = (step, impStep, notConStep) => {
@@ -72,7 +72,27 @@ const validateMTT = (step, impStep, notConStep) => {
     ...impStep.dependencies,
     ...notConStep.dependencies
   ])
-  return validateDependencies(step.dependencies, referenceDependencySet)
+  return validateDependencyChain(step.dependencies, referenceDependencySet)
+}
+
+const validateDNI = (step, refStep) => {
+  // validate the formula relationship
+  const doubleNegation = parseFormulaString(`--(${refStep.formula.string})`)
+  if (step.formula.string !== doubleNegation.string) {
+    throw new Error('Step formula is not the double negation of the reference formula.')
+  }
+  // validate dependency chain
+  return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
+}
+
+const validateDNE = (step, refStep) => {
+  // validate the formula relationship
+  const doubleNegation = parseFormulaString(`--(${step.formula.string})`)
+  if (refStep.formula.string !== doubleNegation.string) {
+    throw new Error('The reference formula is not the double negation of step formula.')
+  }
+  // validate dependency chain
+  return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
 }
 
 export const DERIVATION_RULES = [
@@ -96,6 +116,20 @@ export const DERIVATION_RULES = [
     getNotation: (impLine, notConLine) => `${impLine},${notConLine} MTT`,
     matchNotation: notation => notation.match(/^\d+(,)\d+( MTT)$/),
     validate: validateMTT
+  },
+  {
+    name: 'Double Negation Introduction (DNI)',
+    type: 'DNI',
+    getNotation: line => `${line} DNI`,
+    matchNotation: notation => notation.match(/^\d+( DNI)$/),
+    validate: validateDNI
+  },
+  {
+    name: 'Double Negation Elimination (DNE)',
+    type: 'DNE',
+    getNotation: line => `${line} DNE`,
+    matchNotation: notation => notation.match(/^\d+( DNE)$/),
+    validate: validateDNE
   }
 ]
 

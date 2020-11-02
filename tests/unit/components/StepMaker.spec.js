@@ -122,6 +122,22 @@ describe('computed: referenceList', () => {
     ]
     expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
   })
+
+  it('rule.type === DNI: returns configuration for the reference', () => {
+    const localThis = { rule: DERIVATION_RULES[3] }
+    const referenceList = [
+      { id: 'reference', label: 'Reference Step:', value: null }
+    ]
+    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
+  })
+
+  it('rule.type === DNE: returns configuration for the reference', () => {
+    const localThis = { rule: DERIVATION_RULES[4] }
+    const referenceList = [
+      { id: 'reference', label: 'Reference Step:', value: null }
+    ]
+    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
+  })
 })
 
 describe('methods: commit', () => {

@@ -80,8 +80,9 @@ describe('validateProof', () => {
 })
 
 describe('DERIVATION_RULES', () => {
-  it('include: A, MPP, MTT', () => {
-    expect(DERIVATION_RULES.map(r => r.type)).toEqual(['A', 'MPP', 'MTT'])
+  it('include: A, MPP, MTT, DNI, DNE', () => {
+    expect(DERIVATION_RULES.map(r => r.type))
+      .toEqual(['A', 'MPP', 'MTT', 'DNI', 'DNE'])
   })
 })
 
@@ -283,6 +284,116 @@ describe('Modus Ponendo Ponens (MTT)', () => {
       notation: '1,2 MTT'
     }
     expect(() => { ruleMTT.validate(step, implicationStep, notConsequentStep) })
+      .toThrowError('Dependencies are incorrect.')
+  })
+})
+
+describe('Double Negation Introduction (DNI)', () => {
+  const ruleDNI = DERIVATION_RULES[3]
+
+  const assumptionStep = {
+    dependencies: [1],
+    line: 1,
+    formula: parseFormulaString('P'),
+    notation: 'A'
+  }
+
+  const dniStep = {
+    dependencies: [1],
+    line: 2,
+    formula: parseFormulaString('--P'),
+    notation: '1 DNI'
+  }
+
+  it('has the correct name and type', () => {
+    expect(ruleDNI.name).toBe('Double Negation Introduction (DNI)')
+    expect(ruleDNI.type).toBe('DNI')
+  })
+
+  it('has functional notation getter and matcher', () => {
+    expect(ruleDNI.getNotation(4)).toBe('4 DNI')
+    expect(ruleDNI.matchNotation('13 DNI')).toBeTruthy()
+    expect(ruleDNI.matchNotation('DNI')).toBeFalsy()
+  })
+
+  it('validates a correct DNI step', () => {
+    expect(ruleDNI.validate(dniStep, assumptionStep)).toBeTruthy()
+  })
+
+  it('throws an error when step is not the double negation of the reference', () => {
+    const step = {
+      dependencies: [1],
+      line: 2,
+      formula: parseFormulaString('-P'),
+      notation: '1 DNI'
+    }
+    expect(() => { ruleDNI.validate(step, assumptionStep) })
+      .toThrowError('Step formula is not the double negation of the reference formula.')
+  })
+
+  it('throws an error when dependencies are incorrect', () => {
+    const step = {
+      dependencies: [1, 2],
+      line: 2,
+      formula: parseFormulaString('--P'),
+      notation: '1 DNI'
+    }
+    expect(() => { ruleDNI.validate(step, assumptionStep) })
+      .toThrowError('Dependencies are incorrect.')
+  })
+})
+
+describe('Double Negation Elimination (DNE)', () => {
+  const ruleDNE = DERIVATION_RULES[4]
+
+  const assumptionStep = {
+    dependencies: [1],
+    line: 1,
+    formula: parseFormulaString('--P'),
+    notation: 'A'
+  }
+
+  const dneStep = {
+    dependencies: [1],
+    line: 2,
+    formula: parseFormulaString('P'),
+    notation: '1 DNE'
+  }
+
+  it('has the correct name and type', () => {
+    expect(ruleDNE.name).toBe('Double Negation Elimination (DNE)')
+    expect(ruleDNE.type).toBe('DNE')
+  })
+
+  it('has functional notation getter and matcher', () => {
+    expect(ruleDNE.getNotation(4)).toBe('4 DNE')
+    expect(ruleDNE.matchNotation('13 DNE')).toBeTruthy()
+    expect(ruleDNE.matchNotation('DNE')).toBeFalsy()
+  })
+
+  it('validates a correct DNE step', () => {
+    expect(ruleDNE.validate(dneStep, assumptionStep)).toBeTruthy()
+  })
+
+  it('throws an error when the reference is not the double negation of step formula', () => {
+    const step = {
+      dependencies: [1],
+      line: 2,
+      formula: parseFormulaString('-P'),
+      notation: '1 DNE'
+    }
+    expect(() => { ruleDNE.validate(step, assumptionStep) })
+      .toThrowError('The reference formula is not the double negation of step formula.')
+  })
+
+  it('throws an error when dependencies are incorrect', () => {
+    const step = {
+      dependencies: [0],
+      line: 2,
+      formula: parseFormulaString('P'),
+      notation: '1 DNE'
+    }
+    expect(() => { ruleDNE.validate(step, assumptionStep) })
       .toThrowError('Dependencies are incorrect.')
   })
 })

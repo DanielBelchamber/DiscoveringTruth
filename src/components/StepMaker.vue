@@ -54,6 +54,11 @@ export default {
             { id: 'implication', label: 'Implication Step:', value: null },
             { id: 'notConsequent', label: 'Consequent Negation Step:', value: null }
           ]
+        case 'DNI':
+        case 'DNE':
+          return [
+            { id: 'reference', label: 'Reference Step:', value: null }
+          ]
         case 'A':
         default:
           return []
