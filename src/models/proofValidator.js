@@ -104,20 +104,6 @@ export const DERIVATION_RULES = [
     validate: validateAssumption
   },
   {
-    name: 'Modus Ponendo Ponens (MPP)',
-    type: 'MPP',
-    getNotation: (impLine, antLine) => `${impLine},${antLine} MPP`,
-    matchNotation: notation => notation.match(/^\d+(,)\d+( MPP)$/),
-    validate: validateMPP
-  },
-  {
-    name: 'Modus Tollendo Tollens (MTT)',
-    type: 'MTT',
-    getNotation: (impLine, notConLine) => `${impLine},${notConLine} MTT`,
-    matchNotation: notation => notation.match(/^\d+(,)\d+( MTT)$/),
-    validate: validateMTT
-  },
-  {
     name: 'Double Negation Introduction (DNI)',
     type: 'DNI',
     getNotation: line => `${line} DNI`,
@@ -130,6 +116,20 @@ export const DERIVATION_RULES = [
     getNotation: line => `${line} DNE`,
     matchNotation: notation => notation.match(/^\d+( DNE)$/),
     validate: validateDNE
+  },
+  {
+    name: 'Modus Ponendo Ponens (MPP)',
+    type: 'MPP',
+    getNotation: (impLine, antLine) => `${impLine},${antLine} MPP`,
+    matchNotation: notation => notation.match(/^\d+(,)\d+( MPP)$/),
+    validate: validateMPP
+  },
+  {
+    name: 'Modus Tollendo Tollens (MTT)',
+    type: 'MTT',
+    getNotation: (impLine, notConLine) => `${impLine},${notConLine} MTT`,
+    matchNotation: notation => notation.match(/^\d+(,)\d+( MTT)$/),
+    validate: validateMTT
   }
 ]
 

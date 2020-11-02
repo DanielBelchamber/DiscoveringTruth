@@ -22,7 +22,7 @@ describe('StepMaker.vue', () => {
     const wrapper = shallowMount(StepMaker, {
       propsData: {
         argument: [],
-        rule: DERIVATION_RULES[0]
+        rule: DERIVATION_RULES.find(r => r.type === 'A')
       },
       data: () => ({ formulaString: 'P' })
     })
@@ -44,7 +44,7 @@ describe('StepMaker.vue', () => {
     const wrapper = shallowMount(StepMaker, {
       propsData: {
         argument: [],
-        rule: DERIVATION_RULES[0]
+        rule: DERIVATION_RULES.find(r => r.type === 'A')
       },
       data: () => ({ formulaString: 'P' })
     })
@@ -56,7 +56,7 @@ describe('StepMaker.vue', () => {
     const wrapper = shallowMount(StepMaker, {
       propsData: {
         argument: [implicationAssumptionStep, antecedentAssumptionStep],
-        rule: DERIVATION_RULES[1]
+        rule: DERIVATION_RULES.find(r => r.type === 'MPP')
       },
       data: () => ({ formulaString: '' })
     })
@@ -78,7 +78,7 @@ describe('StepMaker.vue', () => {
     const wrapper = shallowMount(StepMaker, {
       propsData: {
         argument: [implicationAssumptionStep, antecedentAssumptionStep],
-        rule: DERIVATION_RULES[1]
+        rule: DERIVATION_RULES.find(r => r.type === 'MPP')
       },
       data: () => ({ formulaString: '' })
     })
@@ -101,12 +101,28 @@ describe('computed: formula', () => {
 
 describe('computed: referenceList', () => {
   it('rule.type === A: returns empty array', () => {
-    const localThis = { rule: DERIVATION_RULES[0] }
+    const localThis = { rule: DERIVATION_RULES.find(r => r.type === 'A') }
     expect(StepMaker.computed.referenceList.call(localThis)).toEqual([])
   })
 
+  it('rule.type === DNI: returns configuration for the reference', () => {
+    const localThis = { rule: DERIVATION_RULES.find(r => r.type === 'DNI') }
+    const referenceList = [
+      { id: 'reference', label: 'Reference Step:', value: null }
+    ]
+    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
+  })
+
+  it('rule.type === DNE: returns configuration for the reference', () => {
+    const localThis = { rule: DERIVATION_RULES.find(r => r.type === 'DNE') }
+    const referenceList = [
+      { id: 'reference', label: 'Reference Step:', value: null }
+    ]
+    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
+  })
+
   it('rule.type === MPP: returns configuration for implication and antecedent references', () => {
-    const localThis = { rule: DERIVATION_RULES[1] }
+    const localThis = { rule: DERIVATION_RULES.find(r => r.type === 'MPP') }
     const referenceList = [
       { id: 'implication', label: 'Implication Step:', value: null },
       { id: 'antecedent', label: 'Antecedent Step:', value: null }
@@ -115,26 +131,10 @@ describe('computed: referenceList', () => {
   })
 
   it('rule.type === MTT: returns configuration for implication and consequent negation references', () => {
-    const localThis = { rule: DERIVATION_RULES[2] }
+    const localThis = { rule: DERIVATION_RULES.find(r => r.type === 'MTT') }
     const referenceList = [
       { id: 'implication', label: 'Implication Step:', value: null },
       { id: 'notConsequent', label: 'Consequent Negation Step:', value: null }
-    ]
-    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
-  })
-
-  it('rule.type === DNI: returns configuration for the reference', () => {
-    const localThis = { rule: DERIVATION_RULES[3] }
-    const referenceList = [
-      { id: 'reference', label: 'Reference Step:', value: null }
-    ]
-    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
-  })
-
-  it('rule.type === DNE: returns configuration for the reference', () => {
-    const localThis = { rule: DERIVATION_RULES[4] }
-    const referenceList = [
-      { id: 'reference', label: 'Reference Step:', value: null }
     ]
     expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
   })
@@ -145,7 +145,7 @@ describe('methods: commit', () => {
     const wrapper = shallowMount(StepMaker, {
       propsData: {
         argument: [],
-        rule: DERIVATION_RULES[0]
+        rule: DERIVATION_RULES.find(r => r.type === 'A')
       },
       data: () => ({ formulaString: 'P>Q' })
     })
@@ -183,7 +183,7 @@ describe('methods: commit', () => {
     const wrapper = shallowMount(StepMaker, {
       propsData: {
         argument,
-        rule: DERIVATION_RULES[1]
+        rule: DERIVATION_RULES.find(r => r.type === 'MPP')
       },
       data: () => ({ formulaString: 'Q' })
     })
