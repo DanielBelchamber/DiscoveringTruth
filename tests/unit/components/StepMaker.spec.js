@@ -138,21 +138,30 @@ describe('computed: referenceList', () => {
     ]
     expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
   })
+
+  it('rule.type === CP: returns configuration for antecedent assumption and consequent references', () => {
+    const localThis = { rule: DERIVATION_RULES.find(r => r.type === 'CP') }
+    const referenceList = [
+      { id: 'antecedent', label: 'Antecedent Assumption Step:', value: null },
+      { id: 'consequent', label: 'Consequent Step:', value: null }
+    ]
+    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
+  })
 })
 
 describe('methods: commit', () => {
-  it('emits Assumption step', () => {
+  it('emits Assumption (A) step', () => {
     const wrapper = shallowMount(StepMaker, {
       propsData: {
         argument: [],
         rule: DERIVATION_RULES.find(r => r.type === 'A')
       },
-      data: () => ({ formulaString: 'P>Q' })
+      data: () => ({ formulaString: '(P>Q)>R&S' })
     })
     const aStep = {
       dependencies: [1],
       line: 1,
-      formula: parseFormulaString('P>Q'),
+      formula: parseFormulaString('(P>Q)>R&S'),
       notation: 'A'
     }
     wrapper.vm.commit()
@@ -197,5 +206,67 @@ describe('methods: commit', () => {
     wrapper.find('input#antecedent').setValue(2)
     wrapper.vm.commit()
     expect(wrapper.emitted('commit')[0]).toEqual([mppStep])
+  })
+
+  it('emits CP step with independent antecedent introduction', () => {
+    const argument = [
+      {
+        dependencies: [1],
+        line: 1,
+        formula: parseFormulaString('P'),
+        notation: 'A'
+      },
+      {
+        dependencies: [2],
+        line: 2,
+        formula: parseFormulaString('Q'),
+        notation: 'A'
+      }
+    ]
+    const wrapper = shallowMount(StepMaker, {
+      propsData: {
+        argument,
+        rule: DERIVATION_RULES.find(r => r.type === 'CP')
+      },
+      data: () => ({ formulaString: 'Q>P' })
+    })
+    const cpStep = {
+      dependencies: [1],
+      line: 3,
+      formula: parseFormulaString('Q>P'),
+      notation: '2,1 CP'
+    }
+    wrapper.find('input#antecedent').setValue(2)
+    wrapper.find('input#consequent').setValue(1)
+    wrapper.vm.commit()
+    expect(wrapper.emitted('commit')[0]).toEqual([cpStep])
+  })
+
+  it('emits CP step with dependency ejection', () => {
+    const argument = [
+      {
+        dependencies: [1],
+        line: 1,
+        formula: parseFormulaString('P'),
+        notation: 'A'
+      }
+    ]
+    const wrapper = shallowMount(StepMaker, {
+      propsData: {
+        argument,
+        rule: DERIVATION_RULES.find(r => r.type === 'CP')
+      },
+      data: () => ({ formulaString: 'P>P' })
+    })
+    const cpStep = {
+      dependencies: [],
+      line: 2,
+      formula: parseFormulaString('P>P'),
+      notation: '1,1 CP'
+    }
+    wrapper.find('input#antecedent').setValue(1)
+    wrapper.find('input#consequent').setValue(1)
+    wrapper.vm.commit()
+    expect(wrapper.emitted('commit')[0]).toEqual([cpStep])
   })
 })

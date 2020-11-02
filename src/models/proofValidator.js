@@ -100,8 +100,6 @@ const validateCP = (step, antStep, conStep) => {
   // ensure first reference is an assumption
   if (antStep.notation !== 'A') {
     throw new Error('First reference must be an assumption.')
-  } else if (dependencyIndex === -1) {
-    throw new Error('Second reference must depend upon the first.')
   }
   // validate the formula relationship
   if (parseFormulaString(step.formula.left.string).string !== antStep.formula.string) {
@@ -111,7 +109,9 @@ const validateCP = (step, antStep, conStep) => {
   }
   // validate dependency relationship
   const dependencies = [...conStep.dependencies]
-  dependencies.splice(dependencyIndex, 1)
+  if (dependencyIndex !== -1) {
+    dependencies.splice(dependencyIndex, 1)
+  }
   if (dependencies.join(',') !== step.dependencies.join(',')) {
     throw new Error('Dependencies are incorrect.')
   }

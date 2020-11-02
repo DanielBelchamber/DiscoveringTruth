@@ -79,35 +79,30 @@ export default {
       }
       const rule = this.rule
       const argument = this.argument
-      let referenceNumbers, ref0, ref1
-      switch (rule.type) {
-        case 'A':
-          step.dependencies = [stepNumber]
-          step.notation = rule.getNotation()
-          break
-        case 'DNI':
-        case 'DNE':
-        case 'MPP':
-        case 'MTT':
-        default:
-          referenceNumbers = this.referenceList.map(r => r.value)
-          step.notation = rule.getNotation(...referenceNumbers)
-          step.dependencies = [
-            ...new Set(
-              referenceNumbers
-                .map(r => [...argument[r - 1].dependencies])
-                .flat()
-            )
-          ].sort()
-          break
-        case 'CP':
-          referenceNumbers = this.referenceList.map(r => r.value)
-          step.notation = rule.getNotation(...referenceNumbers)
-          ref0 = argument[referenceNumbers[0] - 1]
-          ref1 = argument[referenceNumbers[1] - 1]
-          step.dependencies = [...ref1.dependencies]
-          step.dependencies.splice(ref1.dependencies.indexOf(ref0.line), 1)
-          break
+      // set dependencies and notation according to rule type
+      if (rule.type === 'A') {
+        step.dependencies = [stepNumber]
+        step.notation = rule.getNotation()
+      } else if (rule.type === 'CP') {
+        const referenceNumbers = this.referenceList.map(r => r.value)
+        step.notation = rule.getNotation(...referenceNumbers)
+        const ref0 = argument[referenceNumbers[0] - 1]
+        const ref1 = argument[referenceNumbers[1] - 1]
+        step.dependencies = [...ref1.dependencies]
+        const depIndex = ref1.dependencies.indexOf(ref0.line)
+        if (depIndex !== -1) {
+          step.dependencies.splice(depIndex, 1)
+        }
+      } else { // DNI, DNE, MPP, MTT
+        const referenceNumbers = this.referenceList.map(r => r.value)
+        step.notation = rule.getNotation(...referenceNumbers)
+        step.dependencies = [
+          ...new Set(
+            referenceNumbers
+              .map(r => [...argument[r - 1].dependencies])
+              .flat()
+          )
+        ].sort()
       }
       this.$emit('commit', step)
     }
