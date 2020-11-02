@@ -16,36 +16,106 @@ const validateAssumption = step => {
   }
 }
 
-const validateMPP = (step, implicationStep, antecedentStep) => {
+const validateDependencyChain = (dependencies, referenceDependencySet) => {
+  const missingReferenceSet = new Set(dependencies.filter(a => !referenceDependencySet.has(a)))
+  if (
+    dependencies.length !== referenceDependencySet.size ||
+    missingReferenceSet.size !== 0 ||
+    dependencies.join(',') !== [...dependencies].sort().join(',')
+  ) {
+    throw new Error('Dependencies are incorrect.')
+  } else {
+    return true
+  }
+}
+
+const validateMPP = (step, impStep, antStep) => {
   // validate the formula relationships
-  const implication = implicationStep.formula
+  const implication = impStep.formula
   if (implication.type !== FORMULA_TYPE.IMPLICATION) {
     throw new Error('First reference is not an implication.')
   }
   const antecedent = parseFormulaString(implication.left.string)
   const consequent = parseFormulaString(implication.right.string)
-  if (antecedentStep.formula.string !== antecedent.string) {
+  if (antStep.formula.string !== antecedent.string) {
     throw new Error('Second reference is not the antecedent of the first.')
   } else if (step.formula.string !== consequent.string) {
     throw new Error('Step is not the consequent of the implecation.')
   }
 
   // validate dependency chain
-  const dependencies = step.dependencies
   const referenceDependencySet = new Set([
-    ...implicationStep.dependencies,
-    ...antecedentStep.dependencies
+    ...impStep.dependencies,
+    ...antStep.dependencies
   ])
-  const missingReferenceSet = new Set(dependencies.filter(a => !referenceDependencySet.has(a)))
-  if (
-    dependencies.length !== referenceDependencySet.size ||
-    missingReferenceSet.size !== 0 ||
-    dependencies.join(',') !== [...dependencies].sort().join()
-  ) {
-    throw new Error('Dependencies are incorrect.')
-  } else {
-    return true
+  return validateDependencyChain(step.dependencies, referenceDependencySet)
+}
+
+const validateMTT = (step, impStep, notConStep) => {
+  // validate the formula relationships
+  const implication = impStep.formula
+  if (implication.type !== FORMULA_TYPE.IMPLICATION) {
+    throw new Error('First reference is not an implication.')
   }
+  const antecedent = parseFormulaString(implication.left.string)
+  const notAntecedent = parseFormulaString(`-(${antecedent.string})`)
+  const consequent = parseFormulaString(implication.right.string)
+  const notConsequent = parseFormulaString(`-(${consequent.string})`)
+  if (notConStep.formula.string !== notConsequent.string) {
+    throw new Error('Second reference is not the negation of the consequent of the first.')
+  } else if (step.formula.string !== notAntecedent.string) {
+    throw new Error('Step is not the negation of the antecedent of the implecation.')
+  }
+
+  // validate dependency chain
+  const referenceDependencySet = new Set([
+    ...impStep.dependencies,
+    ...notConStep.dependencies
+  ])
+  return validateDependencyChain(step.dependencies, referenceDependencySet)
+}
+
+const validateDNI = (step, refStep) => {
+  // validate the formula relationship
+  const doubleNegation = parseFormulaString(`--(${refStep.formula.string})`)
+  if (step.formula.string !== doubleNegation.string) {
+    throw new Error('Step formula is not the double negation of the reference formula.')
+  }
+  // validate dependency chain
+  return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
+}
+
+const validateDNE = (step, refStep) => {
+  // validate the formula relationship
+  const doubleNegation = parseFormulaString(`--(${step.formula.string})`)
+  if (refStep.formula.string !== doubleNegation.string) {
+    throw new Error('The reference formula is not the double negation of step formula.')
+  }
+  // validate dependency chain
+  return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
+}
+
+const validateCP = (step, antStep, conStep) => {
+  const dependencyIndex = conStep.dependencies.indexOf(antStep.line)
+  // ensure first reference is an assumption
+  if (antStep.notation !== 'A') {
+    throw new Error('First reference must be an assumption.')
+  }
+  // validate the formula relationship
+  if (parseFormulaString(step.formula.left.string).string !== antStep.formula.string) {
+    throw new Error('First reference is not the antecedent of step formula.')
+  } else if (parseFormulaString(step.formula.right.string).string !== conStep.formula.string) {
+    throw new Error('Second reference is not the consequent of step formula.')
+  }
+  // validate dependency relationship
+  const dependencies = [...conStep.dependencies]
+  if (dependencyIndex !== -1) {
+    dependencies.splice(dependencyIndex, 1)
+  }
+  if (dependencies.join(',') !== step.dependencies.join(',')) {
+    throw new Error('Dependencies are incorrect.')
+  }
+  return true
 }
 
 export const DERIVATION_RULES = [
@@ -57,17 +127,46 @@ export const DERIVATION_RULES = [
     validate: validateAssumption
   },
   {
+    name: 'Double Negation Introduction (DNI)',
+    type: 'DNI',
+    getNotation: line => `${line} DNI`,
+    matchNotation: notation => notation.match(/^\d+( DNI)$/),
+    validate: validateDNI
+  },
+  {
+    name: 'Double Negation Elimination (DNE)',
+    type: 'DNE',
+    getNotation: line => `${line} DNE`,
+    matchNotation: notation => notation.match(/^\d+( DNE)$/),
+    validate: validateDNE
+  },
+  {
     name: 'Modus Ponendo Ponens (MPP)',
     type: 'MPP',
     getNotation: (impLine, antLine) => `${impLine},${antLine} MPP`,
     matchNotation: notation => notation.match(/^\d+(,)\d+( MPP)$/),
     validate: validateMPP
+  },
+  {
+    name: 'Modus Tollendo Tollens (MTT)',
+    type: 'MTT',
+    getNotation: (impLine, notConLine) => `${impLine},${notConLine} MTT`,
+    matchNotation: notation => notation.match(/^\d+(,)\d+( MTT)$/),
+    validate: validateMTT
+  },
+  {
+    name: 'Conditional Proof (CP)',
+    type: 'CP',
+    getNotation: (antLine, conLine) => `${antLine},${conLine} CP`,
+    matchNotation: notation => notation.match(/^\d+(,)\d+( CP)$/),
+    validate: validateCP
   }
 ]
 
 const isConclusionAssertive = (assertion, argument) => {
   const conclusionStep = argument[argument.length - 1]
   if (assertion.conclusion.string !== conclusionStep.formula.string) return false
+  if (assertion.assumptionList.length !== conclusionStep.dependencies.length) return false
   const steps = conclusionStep.dependencies.map(l => argument[l - 1])
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]
@@ -91,14 +190,17 @@ export const validateProof = (assertion, argument) => {
   for (let i = 0; i < argument.length; i++) {
     const step = argument[i]
     const rule = DERIVATION_RULES.find(r => r.matchNotation(step.notation))
+    if (!rule) {
+      throw new Error(`Derivation Rule not found for: ${step.notation}`)
+    }
     if (rule.name === 'Rule of Assumptions (A)') {
       // Assumption steps only reference themselves
       rule.validate(step)
     } else {
       // All others must ensure they have proper references
       const lines = step.notation.match(/\d+/g)
-      const steps = lines.map(l => argument[l - 1])
-      rule.validate(step, ...steps)
+      const referenceSteps = lines.map(l => argument[l - 1])
+      rule.validate(step, ...referenceSteps)
     }
   }
   return true

@@ -44,14 +44,29 @@ export default {
     referenceList () {
       const ruleType = this.rule.type
       switch (ruleType) {
+        case 'A':
+        default:
+          return []
+        case 'DNI':
+        case 'DNE':
+          return [
+            { id: 'reference', label: 'Reference Step:', value: null }
+          ]
         case 'MPP':
           return [
             { id: 'implication', label: 'Implication Step:', value: null },
             { id: 'antecedent', label: 'Antecedent Step:', value: null }
           ]
-        case 'A':
-        default:
-          return []
+        case 'MTT':
+          return [
+            { id: 'implication', label: 'Implication Step:', value: null },
+            { id: 'notConsequent', label: 'Consequent Negation Step:', value: null }
+          ]
+        case 'CP':
+          return [
+            { id: 'antecedent', label: 'Antecedent Assumption Step:', value: null },
+            { id: 'consequent', label: 'Consequent Step:', value: null }
+          ]
       }
     }
   },
@@ -64,24 +79,30 @@ export default {
       }
       const rule = this.rule
       const argument = this.argument
-      let referenceNumbers
-      switch (rule.type) {
-        case 'A':
-          step.dependencies = [stepNumber]
-          step.notation = rule.getNotation()
-          break
-        case 'MPP':
-        default:
-          referenceNumbers = this.referenceList.map(r => r.value)
-          step.notation = rule.getNotation(...referenceNumbers)
-          step.dependencies = [
-            ...new Set(
-              referenceNumbers
-                .map(r => [...argument[r - 1].dependencies])
-                .flat()
-            )
-          ].sort()
-          break
+      // set dependencies and notation according to rule type
+      if (rule.type === 'A') {
+        step.dependencies = [stepNumber]
+        step.notation = rule.getNotation()
+      } else if (rule.type === 'CP') {
+        const referenceNumbers = this.referenceList.map(r => r.value)
+        step.notation = rule.getNotation(...referenceNumbers)
+        const ref0 = argument[referenceNumbers[0] - 1]
+        const ref1 = argument[referenceNumbers[1] - 1]
+        step.dependencies = [...ref1.dependencies]
+        const depIndex = ref1.dependencies.indexOf(ref0.line)
+        if (depIndex !== -1) {
+          step.dependencies.splice(depIndex, 1)
+        }
+      } else { // DNI, DNE, MPP, MTT
+        const referenceNumbers = this.referenceList.map(r => r.value)
+        step.notation = rule.getNotation(...referenceNumbers)
+        step.dependencies = [
+          ...new Set(
+            referenceNumbers
+              .map(r => [...argument[r - 1].dependencies])
+              .flat()
+          )
+        ].sort()
       }
       this.$emit('commit', step)
     }
@@ -98,7 +119,6 @@ export default {
 .reference {
   label {
     display: inline-block;
-    width: 150px;
     padding-right: 8px;
   }
 

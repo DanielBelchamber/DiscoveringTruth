@@ -1,4 +1,5 @@
 <template>
+  <!-- TODO: replace with form -->
   <section>
     <AssertionHeader :assertion="assertion"></AssertionHeader>
     <p class="assumption" v-for="(assumption, index) in assumptionStringList" :key="index">

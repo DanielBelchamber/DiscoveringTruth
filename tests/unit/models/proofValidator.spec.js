@@ -59,6 +59,12 @@ describe('validateProof', () => {
       .toThrowError('Argument does not assert Assertion.')
   })
 
+  it('throws an error when argument conclusion dependencies are not the same length as assertion assumptions', () => {
+    const assertion = constructAssertion(['P', 'Q'], 'P')
+    expect(() => { validateProof(assertion, assumptionArgument) })
+      .toThrowError('Argument does not assert Assertion.')
+  })
+
   it('throws an error when argument conclusion has dependencies that are not assertion assumptions', () => {
     const argument = [
       {
@@ -77,16 +83,30 @@ describe('validateProof', () => {
     expect(() => { validateProof(assumptionAssertion, argument) })
       .toThrowError('Argument does not assert Assertion.')
   })
+
+  it('throws an error when argument step has unrecognized notation', () => {
+    const argument = [
+      {
+        dependencies: [1],
+        line: 2,
+        formula: parseFormulaString('P'),
+        notation: 'BOGUS'
+      }
+    ]
+    expect(() => { validateProof(assumptionAssertion, argument) })
+      .toThrowError('Derivation Rule not found for: BOGUS')
+  })
 })
 
 describe('DERIVATION_RULES', () => {
-  it('include: A, MPP', () => {
-    expect(DERIVATION_RULES.map(r => r.type)).toEqual(['A', 'MPP'])
+  it('include: A, DNI, DNE, MPP, MTT, CP', () => {
+    expect(DERIVATION_RULES.map(r => r.type))
+      .toEqual(['A', 'DNI', 'DNE', 'MPP', 'MTT', 'CP'])
   })
 })
 
 describe('Rule of Assumptions (A)', () => {
-  const ruleA = DERIVATION_RULES[0]
+  const ruleA = DERIVATION_RULES.find(r => r.type === 'A')
 
   it('has the correct name and type', () => {
     expect(ruleA.name).toBe('Rule of Assumptions (A)')
@@ -141,8 +161,118 @@ describe('Rule of Assumptions (A)', () => {
   })
 })
 
+describe('Double Negation Introduction (DNI)', () => {
+  const ruleDNI = DERIVATION_RULES.find(r => r.type === 'DNI')
+
+  const assumptionStep = {
+    dependencies: [1],
+    line: 1,
+    formula: parseFormulaString('P'),
+    notation: 'A'
+  }
+
+  const dniStep = {
+    dependencies: [1],
+    line: 2,
+    formula: parseFormulaString('--P'),
+    notation: '1 DNI'
+  }
+
+  it('has the correct name and type', () => {
+    expect(ruleDNI.name).toBe('Double Negation Introduction (DNI)')
+    expect(ruleDNI.type).toBe('DNI')
+  })
+
+  it('has functional notation getter and matcher', () => {
+    expect(ruleDNI.getNotation(4)).toBe('4 DNI')
+    expect(ruleDNI.matchNotation('13 DNI')).toBeTruthy()
+    expect(ruleDNI.matchNotation('DNI')).toBeFalsy()
+  })
+
+  it('validates a correct DNI step', () => {
+    expect(ruleDNI.validate(dniStep, assumptionStep)).toBeTruthy()
+  })
+
+  it('throws an error when step is not the double negation of the reference', () => {
+    const step = {
+      dependencies: [1],
+      line: 2,
+      formula: parseFormulaString('-P'),
+      notation: '1 DNI'
+    }
+    expect(() => { ruleDNI.validate(step, assumptionStep) })
+      .toThrowError('Step formula is not the double negation of the reference formula.')
+  })
+
+  it('throws an error when dependencies are incorrect', () => {
+    const step = {
+      dependencies: [1, 2],
+      line: 2,
+      formula: parseFormulaString('--P'),
+      notation: '1 DNI'
+    }
+    expect(() => { ruleDNI.validate(step, assumptionStep) })
+      .toThrowError('Dependencies are incorrect.')
+  })
+})
+
+describe('Double Negation Elimination (DNE)', () => {
+  const ruleDNE = DERIVATION_RULES.find(r => r.type === 'DNE')
+
+  const assumptionStep = {
+    dependencies: [1],
+    line: 1,
+    formula: parseFormulaString('--P'),
+    notation: 'A'
+  }
+
+  const dneStep = {
+    dependencies: [1],
+    line: 2,
+    formula: parseFormulaString('P'),
+    notation: '1 DNE'
+  }
+
+  it('has the correct name and type', () => {
+    expect(ruleDNE.name).toBe('Double Negation Elimination (DNE)')
+    expect(ruleDNE.type).toBe('DNE')
+  })
+
+  it('has functional notation getter and matcher', () => {
+    expect(ruleDNE.getNotation(4)).toBe('4 DNE')
+    expect(ruleDNE.matchNotation('13 DNE')).toBeTruthy()
+    expect(ruleDNE.matchNotation('DNE')).toBeFalsy()
+  })
+
+  it('validates a correct DNE step', () => {
+    expect(ruleDNE.validate(dneStep, assumptionStep)).toBeTruthy()
+  })
+
+  it('throws an error when the reference is not the double negation of step formula', () => {
+    const step = {
+      dependencies: [1],
+      line: 2,
+      formula: parseFormulaString('-P'),
+      notation: '1 DNE'
+    }
+    expect(() => { ruleDNE.validate(step, assumptionStep) })
+      .toThrowError('The reference formula is not the double negation of step formula.')
+  })
+
+  it('throws an error when dependencies are incorrect', () => {
+    const step = {
+      dependencies: [0],
+      line: 2,
+      formula: parseFormulaString('P'),
+      notation: '1 DNE'
+    }
+    expect(() => { ruleDNE.validate(step, assumptionStep) })
+      .toThrowError('Dependencies are incorrect.')
+  })
+})
+
 describe('Modus Ponendo Ponens (MPP)', () => {
-  const ruleMPP = DERIVATION_RULES[1]
+  const ruleMPP = DERIVATION_RULES.find(r => r.type === 'MPP')
 
   const implicationStep = {
     dependencies: [1],
@@ -211,6 +341,184 @@ describe('Modus Ponendo Ponens (MPP)', () => {
 
   it('throws an error when dependencies are incorrect', () => {
     expect(() => { ruleMPP.validate(mppStep3, implicationStep, antecedentStep) })
+      .toThrowError('Dependencies are incorrect.')
+  })
+})
+
+describe('Modus Ponendo Ponens (MTT)', () => {
+  const ruleMTT = DERIVATION_RULES.find(r => r.type === 'MTT')
+
+  const implicationStep = {
+    dependencies: [1],
+    line: 1,
+    formula: parseFormulaString('P>Q'),
+    notation: 'A'
+  }
+
+  const notConsequentStep = {
+    dependencies: [2],
+    line: 2,
+    formula: parseFormulaString('-Q'),
+    notation: 'A'
+  }
+
+  const mttStep = {
+    dependencies: [1, 2],
+    line: 3,
+    formula: parseFormulaString('-P'),
+    notation: '1,2 MTT'
+  }
+
+  it('has the correct name and type', () => {
+    expect(ruleMTT.name).toBe('Modus Tollendo Tollens (MTT)')
+    expect(ruleMTT.type).toBe('MTT')
+  })
+
+  it('has functional notation getter and matcher', () => {
+    expect(ruleMTT.getNotation(7, 3)).toBe('7,3 MTT')
+    expect(ruleMTT.matchNotation('72,33 MTT')).toBeTruthy()
+    expect(ruleMTT.matchNotation('1 MTT')).toBeFalsy()
+  })
+
+  it('validates a correct MTT step', () => {
+    expect(ruleMTT.validate(mttStep, implicationStep, notConsequentStep)).toBeTruthy()
+  })
+
+  it('throws an error when first reference is not an implication', () => {
+    expect(() => { ruleMTT.validate(mttStep, mttStep, notConsequentStep) })
+      .toThrowError('First reference is not an implication.')
+  })
+
+  it('throws an error when second reference is not the negation of the consequent', () => {
+    expect(() => { ruleMTT.validate(mttStep, implicationStep, mttStep) })
+      .toThrowError('Second reference is not the negation of the consequent of the first.')
+  })
+
+  it('throws an error when step is not the negation of the antecedent', () => {
+    const step = {
+      dependencies: [1, 2],
+      line: 3,
+      formula: parseFormulaString('-P&Q'),
+      notation: '1,2 MTT'
+    }
+    expect(() => { ruleMTT.validate(step, implicationStep, notConsequentStep) })
+      .toThrowError('Step is not the negation of the antecedent of the implecation.')
+  })
+
+  it('throws an error when dependencies are incorrect', () => {
+    const step = {
+      dependencies: [],
+      line: 3,
+      formula: parseFormulaString('-P'),
+      notation: '1,2 MTT'
+    }
+    expect(() => { ruleMTT.validate(step, implicationStep, notConsequentStep) })
+      .toThrowError('Dependencies are incorrect.')
+  })
+})
+
+describe('Conditional Proof (CP)', () => {
+  const ruleCP = DERIVATION_RULES.find(r => r.type === 'CP')
+
+  const consequentStep = {
+    dependencies: [1],
+    line: 1,
+    formula: parseFormulaString('P'),
+    notation: 'A'
+  }
+
+  const antecedentStep = {
+    dependencies: [2],
+    line: 2,
+    formula: parseFormulaString('Q'),
+    notation: 'A'
+  }
+
+  const cpStep2 = {
+    dependencies: [],
+    line: 2,
+    formula: parseFormulaString('P>P'),
+    notation: '1,1 CP'
+  }
+
+  const cpStep3 = {
+    dependencies: [1],
+    line: 3,
+    formula: parseFormulaString('Q>P'),
+    notation: '2,1 CP'
+  }
+
+  it('has the correct name and type', () => {
+    expect(ruleCP.name).toBe('Conditional Proof (CP)')
+    expect(ruleCP.type).toBe('CP')
+  })
+
+  it('has functional notation getter and matcher', () => {
+    expect(ruleCP.getNotation(7, 3)).toBe('7,3 CP')
+    expect(ruleCP.matchNotation('72,33 CP')).toBeTruthy()
+    expect(ruleCP.matchNotation('CP 3,4')).toBeFalsy()
+  })
+
+  it('validates a correct CP step with independent antecedent introduction', () => {
+    expect(ruleCP.validate(cpStep3, antecedentStep, consequentStep)).toBeTruthy()
+  })
+
+  it('validates a correct CP step with dependency ejection', () => {
+    expect(ruleCP.validate(cpStep2, consequentStep, consequentStep)).toBeTruthy()
+  })
+
+  it('throws an error when first reference is not an assumption', () => {
+    const antStep = {
+      dependencies: [1],
+      line: 1,
+      formula: parseFormulaString('P'),
+      notation: '3,4 MPP'
+    }
+    expect(() => { ruleCP.validate(cpStep2, antStep, consequentStep) })
+      .toThrowError('First reference must be an assumption.')
+  })
+
+  it('throws an error when first reference is not the antecedent of the step', () => {
+    const step = {
+      dependencies: [1],
+      line: 3,
+      formula: parseFormulaString('R>P'),
+      notation: '2,1 CP'
+    }
+    expect(() => { ruleCP.validate(step, antecedentStep, consequentStep) })
+      .toThrowError('First reference is not the antecedent of step formula.')
+  })
+
+  it('throws an error when second reference is not the consequent of the step', () => {
+    const step = {
+      dependencies: [1],
+      line: 3,
+      formula: parseFormulaString('Q>S'),
+      notation: '2,1 CP'
+    }
+    expect(() => { ruleCP.validate(step, antecedentStep, consequentStep) })
+      .toThrowError('Second reference is not the consequent of step formula.')
+  })
+
+  it('throws an error when independent antecedent introduction dependencies are incorrect', () => {
+    const step = {
+      dependencies: [1, 2],
+      line: 3,
+      formula: parseFormulaString('Q>P'),
+      notation: '2,1 CP'
+    }
+    expect(() => { ruleCP.validate(step, antecedentStep, consequentStep) })
+      .toThrowError('Dependencies are incorrect.')
+  })
+
+  it('throws an error when dependency ejection dependencies are incorrect', () => {
+    const step = {
+      dependencies: [1],
+      line: 2,
+      formula: parseFormulaString('P>P'),
+      notation: '1,1 CP'
+    }
+    expect(() => { ruleCP.validate(step, consequentStep, consequentStep) })
       .toThrowError('Dependencies are incorrect.')
   })
 })
