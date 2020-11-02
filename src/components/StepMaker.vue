@@ -44,6 +44,14 @@ export default {
     referenceList () {
       const ruleType = this.rule.type
       switch (ruleType) {
+        case 'A':
+        default:
+          return []
+        case 'DNI':
+        case 'DNE':
+          return [
+            { id: 'reference', label: 'Reference Step:', value: null }
+          ]
         case 'MPP':
           return [
             { id: 'implication', label: 'Implication Step:', value: null },
@@ -54,14 +62,11 @@ export default {
             { id: 'implication', label: 'Implication Step:', value: null },
             { id: 'notConsequent', label: 'Consequent Negation Step:', value: null }
           ]
-        case 'DNI':
-        case 'DNE':
+        case 'CP':
           return [
-            { id: 'reference', label: 'Reference Step:', value: null }
+            { id: 'antecedent', label: 'Antecedent Assumption Step:', value: null },
+            { id: 'consequent', label: 'Consequent Step:', value: null }
           ]
-        case 'A':
-        default:
-          return []
       }
     }
   },
@@ -74,13 +79,16 @@ export default {
       }
       const rule = this.rule
       const argument = this.argument
-      let referenceNumbers
+      let referenceNumbers, ref0, ref1
       switch (rule.type) {
         case 'A':
           step.dependencies = [stepNumber]
           step.notation = rule.getNotation()
           break
+        case 'DNI':
+        case 'DNE':
         case 'MPP':
+        case 'MTT':
         default:
           referenceNumbers = this.referenceList.map(r => r.value)
           step.notation = rule.getNotation(...referenceNumbers)
@@ -91,6 +99,14 @@ export default {
                 .flat()
             )
           ].sort()
+          break
+        case 'CP':
+          referenceNumbers = this.referenceList.map(r => r.value)
+          step.notation = rule.getNotation(...referenceNumbers)
+          ref0 = argument[referenceNumbers[0] - 1]
+          ref1 = argument[referenceNumbers[1] - 1]
+          step.dependencies = [...ref1.dependencies]
+          step.dependencies.splice(ref1.dependencies.indexOf(ref0.line), 1)
           break
       }
       this.$emit('commit', step)

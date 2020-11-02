@@ -95,6 +95,29 @@ const validateDNE = (step, refStep) => {
   return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
 }
 
+const validateCP = (step, antStep, conStep) => {
+  const dependencyIndex = conStep.dependencies.indexOf(antStep.line)
+  // ensure first reference is an assumption
+  if (antStep.notation !== 'A') {
+    throw new Error('First reference must be an assumption.')
+  } else if (dependencyIndex === -1) {
+    throw new Error('Second reference must depend upon the first.')
+  }
+  // validate the formula relationship
+  if (parseFormulaString(step.formula.left.string).string !== antStep.formula.string) {
+    throw new Error('First reference is not the antecedent of step formula.')
+  } else if (parseFormulaString(step.formula.right.string).string !== conStep.formula.string) {
+    throw new Error('Second reference is not the consequent of step formula.')
+  }
+  // validate dependency relationship
+  const dependencies = [...conStep.dependencies]
+  dependencies.splice(dependencyIndex, 1)
+  if (dependencies.join(',') !== step.dependencies.join(',')) {
+    throw new Error('Dependencies are incorrect.')
+  }
+  return true
+}
+
 export const DERIVATION_RULES = [
   {
     name: 'Rule of Assumptions (A)',
@@ -130,12 +153,20 @@ export const DERIVATION_RULES = [
     getNotation: (impLine, notConLine) => `${impLine},${notConLine} MTT`,
     matchNotation: notation => notation.match(/^\d+(,)\d+( MTT)$/),
     validate: validateMTT
+  },
+  {
+    name: 'Conditional Proof (CP)',
+    type: 'CP',
+    getNotation: (antLine, conLine) => `${antLine},${conLine} CP`,
+    matchNotation: notation => notation.match(/^\d+(,)\d+( CP)$/),
+    validate: validateCP
   }
 ]
 
 const isConclusionAssertive = (assertion, argument) => {
   const conclusionStep = argument[argument.length - 1]
   if (assertion.conclusion.string !== conclusionStep.formula.string) return false
+  if (assertion.assumptionList.length !== conclusionStep.dependencies.length) return false
   const steps = conclusionStep.dependencies.map(l => argument[l - 1])
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]
@@ -159,6 +190,9 @@ export const validateProof = (assertion, argument) => {
   for (let i = 0; i < argument.length; i++) {
     const step = argument[i]
     const rule = DERIVATION_RULES.find(r => r.matchNotation(step.notation))
+    if (!rule) {
+      throw new Error(`Derivation Rule not found for: ${step.notation}`)
+    }
     if (rule.name === 'Rule of Assumptions (A)') {
       // Assumption steps only reference themselves
       rule.validate(step)
