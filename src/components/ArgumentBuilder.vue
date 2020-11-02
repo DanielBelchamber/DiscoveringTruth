@@ -1,27 +1,78 @@
 <template>
-  <div class="argument-builder">
-    <div class="argument-container">
+  <section class="argument-builder">
+    <AssertionHeader :assertion="assertion"></AssertionHeader>
+    <!-- TODO: Consider presenting the Argument as a table -->
+    <article class="argument">
       <ArgumentStep v-for="(step, stepIndex) in argument" :key="stepIndex" :step="step"></ArgumentStep>
-    </div>
-    <button v-if="!hasSubmitted" @click="submitArgument">Submit Argument</button>
-  </div>
+    </article>
+
+    <template v-if="!hasSubmitted && addingStep">
+      <select class="rule" v-model="rule">
+        <option disabled :value="null">Choose Derivation Rule</option>
+        <option
+          v-for="(rule, index) in ruleList"
+          :key="index"
+          :value="rule"
+          :disabled="!isAssumptionOrNotFirst(rule.type)"
+        >
+          {{ rule.name }}
+        </option>
+      </select>
+      <button @click="cancel">Cancel</button>
+      <template v-if="rule">
+        <StepMaker :argument="argument" :rule="rule" @commit="commitStep"></StepMaker>
+      </template>
+    </template>
+
+    <template v-if="!hasSubmitted && !addingStep">
+      <button @click="addStep">Add Step</button>
+      <button @click="submitArgument">Submit Argument</button>
+    </template>
+  </section>
 </template>
 
 <script>
-import EXAMPLE_DATA from '@/EXAMPLE_DATA.js'
+import AssertionHeader from '@/components/AssertionHeader.vue'
 import ArgumentStep from '@/components/ArgumentStep.vue'
+import StepMaker from '@/components/StepMaker.vue'
+import { DERIVATION_RULES } from '@/models/proofValidator.js'
 
 export default {
-  components: { ArgumentStep },
+  components: {
+    AssertionHeader,
+    ArgumentStep,
+    StepMaker
+  },
+  props: {
+    assertion: Object
+  },
   data () {
     return {
-      argument: EXAMPLE_DATA.argument,
+      argument: [],
+      ruleList: DERIVATION_RULES,
+      rule: null,
+      addingStep: false,
       hasSubmitted: false
     }
   },
   methods: {
+    addStep () {
+      this.addingStep = true
+    },
+    isAssumptionOrNotFirst (ruleType) {
+      return ruleType === 'A' || this.argument.length > 0
+    },
+    cancel () {
+      this.addingStep = false
+      this.rule = null
+    },
+    commitStep (step) {
+      this.argument.push(step)
+      this.addingStep = false
+      this.rule = null
+    },
     submitArgument () {
-      this.$emit('submit', this.argument)
+      this.$emit('validate', this.argument)
       this.hasSubmitted = true
     }
   }
@@ -30,6 +81,10 @@ export default {
 
 <style lang="scss" scoped>
 .argument-builder button {
+  margin: 16px 4px 0;
+}
+
+select.rule {
   margin-top: 16px;
 }
 </style>

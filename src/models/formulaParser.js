@@ -40,7 +40,7 @@ const analyzeFormulaString = (formulaString, elementList) => {
   })
   // Once all SUBSTITUTION_RULES have been executed, the result should be a single index reference
   if (isNaN(referenceString)) {
-    // NOTE: This does not catch ambiguity errors (see constructFormula)
+    // This does not catch ambiguity errors (see constructFormula)
     throw new SyntaxError(`Formula is not well-formed: ${formulaString}`)
   }
   return {
@@ -102,7 +102,7 @@ const constructFormula = (index, elementList, parentType) => {
       return {
         type: node.type,
         hasParentheses: false,
-        toString: () => element
+        string: element
       }
     case FORMULA_NODE_TYPE.PARENTHESES:
       centerIndex = elementList.indexOf(element.slice(1, -1))
@@ -116,7 +116,7 @@ const constructFormula = (index, elementList, parentType) => {
       return {
         ...center,
         hasParentheses,
-        toString: () => hasParentheses ? `(${center.toString()})` : center.toString()
+        string: hasParentheses ? `(${center.string})` : center.string
       }
     case FORMULA_NODE_TYPE.NEGATION:
       right = constructFormula(+matchList[0], elementList, node.type)
@@ -124,13 +124,13 @@ const constructFormula = (index, elementList, parentType) => {
         type: node.type,
         hasParentheses: false,
         right,
-        toString: () => `${node.symbol}${right.toString()}`
+        string: `${node.symbol}${right.string}`
       }
     case FORMULA_NODE_TYPE.CONJUNCTION:
     case FORMULA_NODE_TYPE.DISJUNCTION:
       left = constructFormula(+matchList[0], elementList, node.type)
       right = constructFormula(+matchList[1], elementList, node.type)
-      formulaString = `${left.toString()}${node.symbol}${right.toString()}`
+      formulaString = `${left.string}${node.symbol}${right.string}`
       if
       (
         (!left.hasParentheses &&
@@ -145,12 +145,12 @@ const constructFormula = (index, elementList, parentType) => {
         hasParentheses: false,
         left,
         right,
-        toString: () => formulaString
+        string: formulaString
       }
     case FORMULA_NODE_TYPE.IMPLICATION:
       left = constructFormula(+matchList[0], elementList, node.type)
       right = constructFormula(+matchList[1], elementList, node.type)
-      formulaString = `${left.toString()}${node.symbol}${right.toString()}`
+      formulaString = `${left.string}${node.symbol}${right.string}`
       if
       (
         (!left.hasParentheses && left.type === FORMULA_NODE_TYPE.IMPLICATION) ||
@@ -163,7 +163,7 @@ const constructFormula = (index, elementList, parentType) => {
         hasParentheses: false,
         left,
         right,
-        toString: () => formulaString
+        string: formulaString
       }
     // no default
   }

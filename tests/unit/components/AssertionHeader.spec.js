@@ -4,11 +4,27 @@ import FormulaSpan from '@/components/FormulaSpan.vue'
 import { constructAssertion } from '@/models/formulaParser.js'
 
 describe('AssertionHeader.vue', () => {
-  it('renders FormulaSpan component', () => {
+  it('conditionally renders placeholder message', () => {
+    const wrapper = shallowMount(AssertionHeader, {
+      propsData: {
+        assertion: {
+          assumptionList: [],
+          conclusion: null
+        }
+      }
+    })
+    const placeholder = wrapper.find('.placeholder')
+    expect(placeholder.exists()).toBeTruthy()
+    expect(placeholder.text()).toBe('Declare Assertion')
+    expect(wrapper.findComponent(FormulaSpan).exists()).toBeFalsy()
+  })
+
+  it('conditionally renders FormulaSpan component', () => {
     const wrapper = shallowMount(AssertionHeader, {
       propsData: { assertion: constructAssertion([], 'Qv-Q') }
     })
     expect(wrapper.findComponent(FormulaSpan).exists()).toBeTruthy()
+    expect(wrapper.find('.placeholder').exists()).toBeFalsy()
   })
 
   it('renders conclusion without assumptions', () => {
@@ -40,10 +56,27 @@ describe('AssertionHeader.vue', () => {
   })
 })
 
+describe('computed: hasConclusion', () => {
+  it('returns false when conclusion is null', () => {
+    const localThis = {
+      assertion: {
+        assumptionList: [],
+        conclusion: null
+      }
+    }
+    expect(AssertionHeader.computed.hasConclusion.call(localThis)).toBeFalsy()
+  })
+
+  it('returns true when conclusion is a well-formed formula', () => {
+    const localThis = { assertion: constructAssertion([], 'Q') }
+    expect(AssertionHeader.computed.hasConclusion.call(localThis)).toBeTruthy()
+  })
+})
+
 describe('computed: assertHtml', () => {
   it('assumptions.length >= 1: returns the assert symbol with double spaces before and after', () => {
     const space = '&nbsp;'
-    const assert = '&#x22A6;'
+    const assert = '\u22A6'
     const assertHtml = `${space}${space}${assert}${space}${space}`
     const localThis = { assertion: constructAssertion(['P>Q', 'P'], 'Q') }
     expect(AssertionHeader.computed.assertHtml.call(localThis)).toBe(assertHtml)
@@ -51,7 +84,7 @@ describe('computed: assertHtml', () => {
 
   it('assumptions.length === 0: returns the assert symbol with double spaces after', () => {
     const space = '&nbsp;'
-    const assert = '&#x22A6;'
+    const assert = '\u22A6'
     const assertHtml = `${assert}${space}${space}`
     const localThis = { assertion: constructAssertion([], 'Q') }
     expect(AssertionHeader.computed.assertHtml.call(localThis)).toBe(assertHtml)

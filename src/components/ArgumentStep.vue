@@ -1,10 +1,10 @@
 <template>
-  <div class="argument-step">
-    <div class="dependencies">{{ step.dependencies.join(',') }}</div>
-    <div class="line">({{ step.line }})</div>
-    <div class="formula"><FormulaSpan :formula="step.formula"></FormulaSpan></div>
-    <div class="notation">{{ step.notation }}</div>
-  </div>
+  <p class="argument-step">
+    <span class="dependencies">{{ step.dependencies.join(',') }}</span>
+    <span class="line">({{ step.line }})</span>
+    <span class="formula"><FormulaSpan :formula="step.formula"></FormulaSpan></span>
+    <span class="notation">{{ step.notation }}</span>
+  </p>
 </template>
 
 <script>
@@ -21,7 +21,7 @@ export default {
 <style lang="scss" scoped>
 .argument-step {
   display: flex;
-  margin-bottom: 4px;
+  margin: 4px 0;
 
   .dependencies {
     width: 50px;

@@ -1,6 +1,6 @@
 {
   "name": "discovering-truth",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "start": "npm run serve",
@@ -24,7 +24,7 @@
     "@vue/cli-plugin-unit-jest": "4.5.8",
     "@vue/cli-service": "4.5.8",
     "@vue/eslint-config-standard": "5.1.2",
-    "@vue/test-utils": "1.1.0",
+    "@vue/test-utils": "1.1.1",
     "babel-eslint": "10.1.0",
     "eslint": "6.8.0",
     "eslint-plugin-import": "2.22.1",
@@ -42,7 +42,7 @@
   },
   "lint-staged": {
     "*.{js,vue}": [
-      "vue-cli-service lint",
+      "vue-cli-service lint --fix",
       "git add"
     ]
   }

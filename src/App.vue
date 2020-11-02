@@ -1,34 +1,54 @@
 <template>
   <div id="app">
-    <h1>Propositional Logic</h1>
     <main>
-      <AssertionHeader :assertion="assertion"></AssertionHeader>
-      <ArgumentBuilder @submit="validateArgument"></ArgumentBuilder>
-      <p v-if="hasProof" class="congratulations">Your proof is valid!</p>
+      <template v-if="!assertionDelcared">
+        <AssertionCreator @declare="declareAssertion"></AssertionCreator>
+      </template>
+      <template v-else>
+        <ArgumentBuilder :assertion="assertion" @validate="validateArgument"></ArgumentBuilder>
+      </template>
+
+      <template v-if="argumentGiven">
+        <p v-if="proofValidated" class="congratulations">Your proof is valid!</p>
+        <p v-else class="invalid">Your proof is invalid.</p>
+      </template>
     </main>
   </div>
 </template>
 
 <script>
-import EXAMPLE_DATA from '@/EXAMPLE_DATA.js'
-import AssertionHeader from '@/components/AssertionHeader.vue'
 import ArgumentBuilder from '@/components/ArgumentBuilder.vue'
+import AssertionCreator from '@/components/AssertionCreator.vue'
 import { validateProof } from '@/models/proofValidator.js'
 
 export default {
   components: {
-    AssertionHeader,
+    AssertionCreator,
     ArgumentBuilder
   },
   data () {
     return {
-      assertion: EXAMPLE_DATA.assertion,
-      hasProof: false
+      assertion: null,
+      argumentGiven: false,
+      proofValidated: false
+    }
+  },
+  computed: {
+    assertionDelcared () {
+      return this.assertion !== null
     }
   },
   methods: {
+    declareAssertion (assertion) {
+      this.assertion = assertion
+    },
     validateArgument (argument) {
-      this.hasProof = validateProof(this.assertion, argument)
+      this.argumentGiven = true
+      try {
+        this.proofValidated = validateProof(this.assertion, argument)
+      } catch (error) {
+        this.proofValidated = false
+      }
     }
   }
 }
@@ -48,6 +68,8 @@ body {
 
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
+  background-color: white;
+  color: black;
   height: inherit;
   width: inherit;
   display: flex;
@@ -56,12 +78,25 @@ body {
   justify-content: center;
 
   main {
+    min-width: 320px;
     flex-grow: 1;
     text-align: center;
   }
 
-  button {
-    cursor: pointer;
+  .congratulations, .invalid {
+    font-size: 20px;
   }
+
+  .congratulations {
+    color: #4baf4f;
+  }
+
+  .invalid {
+    color: #ff5252;
+  }
+}
+
+button {
+  cursor: pointer;
 }
 </style>
