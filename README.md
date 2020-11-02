@@ -12,4 +12,8 @@ This is a simple app for working with basic Propositional Logic proof structures
 ### Derivation Rules
 
 - Rule of Assumptions (A)
+- Double Negation Introduction (DNI)
+- Double Negation Elimination (DNE)
 - Modus Ponendo Ponens (MPP)
+- Modus Tollendo Tollens (MTT)
+- Conditional Proof (CP)
