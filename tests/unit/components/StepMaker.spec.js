@@ -113,6 +113,15 @@ describe('computed: referenceList', () => {
     ]
     expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
   })
+
+  it('rule.type === MTT: returns configuration for implication and consequent negation references', () => {
+    const localThis = { rule: DERIVATION_RULES[2] }
+    const referenceList = [
+      { id: 'implication', label: 'Implication Step:', value: null },
+      { id: 'notConsequent', label: 'Consequent Negation Step:', value: null }
+    ]
+    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
+  })
 })
 
 describe('methods: commit', () => {

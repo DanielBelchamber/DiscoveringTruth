@@ -80,8 +80,8 @@ describe('validateProof', () => {
 })
 
 describe('DERIVATION_RULES', () => {
-  it('include: A, MPP', () => {
-    expect(DERIVATION_RULES.map(r => r.type)).toEqual(['A', 'MPP'])
+  it('include: A, MPP, MTT', () => {
+    expect(DERIVATION_RULES.map(r => r.type)).toEqual(['A', 'MPP', 'MTT'])
   })
 })
 
@@ -211,6 +211,78 @@ describe('Modus Ponendo Ponens (MPP)', () => {
 
   it('throws an error when dependencies are incorrect', () => {
     expect(() => { ruleMPP.validate(mppStep3, implicationStep, antecedentStep) })
+      .toThrowError('Dependencies are incorrect.')
+  })
+})
+
+describe('Modus Ponendo Ponens (MTT)', () => {
+  const ruleMTT = DERIVATION_RULES[2]
+
+  const implicationStep = {
+    dependencies: [1],
+    line: 1,
+    formula: parseFormulaString('P>Q'),
+    notation: 'A'
+  }
+
+  const notConsequentStep = {
+    dependencies: [2],
+    line: 2,
+    formula: parseFormulaString('-Q'),
+    notation: 'A'
+  }
+
+  const mttStep = {
+    dependencies: [1, 2],
+    line: 3,
+    formula: parseFormulaString('-P'),
+    notation: '1,2 MTT'
+  }
+
+  it('has the correct name and type', () => {
+    expect(ruleMTT.name).toBe('Modus Tollendo Tollens (MTT)')
+    expect(ruleMTT.type).toBe('MTT')
+  })
+
+  it('has functional notation getter and matcher', () => {
+    expect(ruleMTT.getNotation(7, 3)).toBe('7,3 MTT')
+    expect(ruleMTT.matchNotation('72,33 MTT')).toBeTruthy()
+    expect(ruleMTT.matchNotation('1 MTT')).toBeFalsy()
+  })
+
+  it('validates a correct MTT step', () => {
+    expect(ruleMTT.validate(mttStep, implicationStep, notConsequentStep)).toBeTruthy()
+  })
+
+  it('throws an error when first reference is not an implication', () => {
+    expect(() => { ruleMTT.validate(mttStep, mttStep, notConsequentStep) })
+      .toThrowError('First reference is not an implication.')
+  })
+
+  it('throws an error when second reference is not the negation of the consequent', () => {
+    expect(() => { ruleMTT.validate(mttStep, implicationStep, mttStep) })
+      .toThrowError('Second reference is not the negation of the consequent of the first.')
+  })
+
+  it('throws an error when step is not the negation of the antecedent', () => {
+    const step = {
+      dependencies: [1, 2],
+      line: 3,
+      formula: parseFormulaString('-P&Q'),
+      notation: '1,2 MTT'
+    }
+    expect(() => { ruleMTT.validate(step, implicationStep, notConsequentStep) })
+      .toThrowError('Step is not the negation of the antecedent of the implecation.')
+  })
+
+  it('throws an error when dependencies are incorrect', () => {
+    const step = {
+      dependencies: [],
+      line: 3,
+      formula: parseFormulaString('-P'),
+      notation: '1,2 MTT'
+    }
+    expect(() => { ruleMTT.validate(step, implicationStep, notConsequentStep) })
       .toThrowError('Dependencies are incorrect.')
   })
 })

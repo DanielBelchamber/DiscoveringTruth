@@ -49,6 +49,11 @@ export default {
             { id: 'implication', label: 'Implication Step:', value: null },
             { id: 'antecedent', label: 'Antecedent Step:', value: null }
           ]
+        case 'MTT':
+          return [
+            { id: 'implication', label: 'Implication Step:', value: null },
+            { id: 'notConsequent', label: 'Consequent Negation Step:', value: null }
+          ]
         case 'A':
         default:
           return []
@@ -98,7 +103,6 @@ export default {
 .reference {
   label {
     display: inline-block;
-    width: 150px;
     padding-right: 8px;
   }
 
