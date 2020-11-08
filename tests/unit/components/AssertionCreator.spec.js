@@ -144,24 +144,6 @@ describe('computed: assertion', () => {
   })
 })
 
-describe('computed: atMaxAssumptions', () => {
-  it('returns true when the assumption limit has been reached', () => {
-    const localThis = {
-      assumptionLimit: 2,
-      assumptionStringList: ['P', 'Q']
-    }
-    expect(AssertionCreator.computed.atMaxAssumptions.call(localThis)).toBeTruthy()
-  })
-
-  it('returns false when under the assumption limit', () => {
-    const localThis = {
-      assumptionLimit: 4,
-      assumptionStringList: ['P', 'Q']
-    }
-    expect(AssertionCreator.computed.atMaxAssumptions.call(localThis)).toBeFalsy()
-  })
-})
-
 describe('computed: hasConclusion', () => {
   it('returns true when assertion conclusion is a well-formed formula', async () => {
     const localThis = { assertion: constructAssertion(['P', 'Q'], 'P>(P>Q)') }

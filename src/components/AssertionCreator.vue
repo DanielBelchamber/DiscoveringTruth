@@ -12,7 +12,7 @@
       <input type="text" id="conclusion" v-model="conclusionString"/>
     </p>
 
-    <button @click="addAssumption" :disabled="atMaxAssumptions">Add Assumption</button>
+    <button @click="addAssumption">Add Assumption</button>
     <button @click="declareAssertion" :disabled="!hasConclusion">Declare Assertion</button>
   </section>
 </template>
@@ -27,7 +27,6 @@ export default {
   },
   data () {
     return {
-      assumptionLimit: 5, // hard-coded
       assumptionStringList: [],
       conclusionString: ''
     }
@@ -44,9 +43,6 @@ export default {
           conclusion: null
         }
       }
-    },
-    atMaxAssumptions () {
-      return this.assumptionStringList.length >= this.assumptionLimit
     },
     hasConclusion () {
       return this.assertion.conclusion !== null
