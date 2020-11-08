@@ -1,6 +1,5 @@
 <template>
-  <!-- TODO: replace with form -->
-  <section>
+  <form @submit.prevent="declareAssertion">
     <AssertionHeader :assertion="assertion"></AssertionHeader>
     <p class="assumption" v-for="(assumption, index) in assumptionStringList" :key="index">
       <label :for="getAssumptionID(index)">{{ getAssumptionLabel(index) }}</label>
@@ -12,9 +11,9 @@
       <input type="text" id="conclusion" v-model="conclusionString"/>
     </p>
 
+    <input type="submit" :disabled="!hasConclusion" value="Declare Assertion"/>
     <button @click="addAssumption">Add Assumption</button>
-    <button @click="declareAssertion" :disabled="!hasConclusion">Declare Assertion</button>
-  </section>
+  </form>
 </template>
 
 <script>
@@ -62,7 +61,9 @@ export default {
       this.assumptionStringList.splice(index, 1)
     },
     declareAssertion () {
-      this.$emit('declare', this.assertion)
+      if (this.hasConclusion) {
+        this.$emit('declare', this.assertion)
+      }
     }
   }
 }

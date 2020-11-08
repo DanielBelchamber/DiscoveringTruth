@@ -91,12 +91,14 @@ describe('AssertionCreator.vue', () => {
     expect(wrapper.vm.$data.conclusionString).toEqual('Pv-P')
   })
 
-  it('renders the two buttons', () => {
+  it('renders button and submit input', () => {
     const wrapper = shallowMount(AssertionCreator)
-    const buttons = wrapper.findAll('button')
-    expect(buttons.length).toBe(2)
-    expect(buttons.at(0).text()).toBe('Add Assumption')
-    expect(buttons.at(1).text()).toBe('Declare Assertion')
+    const button = wrapper.find('button')
+    expect(button.exists()).toBeTruthy()
+    expect(button.text()).toBe('Add Assumption')
+    const submit = wrapper.find('input[type=submit]')
+    expect(submit.exists()).toBeTruthy()
+    expect(submit.element.value).toBe('Declare Assertion')
   })
 
   it('calls addAssumption on button click', () => {
@@ -108,12 +110,12 @@ describe('AssertionCreator.vue', () => {
     expect(addAssumption).toBeCalled()
   })
 
-  it('calls declareAssertion on button click', () => {
+  it('calls declareAssertion on form submit', async () => {
     const declareAssertion = jest.spyOn(AssertionCreator.methods, 'declareAssertion')
     const wrapper = shallowMount(AssertionCreator, {
       data: () => ({ conclusionString: 'P&Q' })
     })
-    wrapper.findAll('button').at(1).trigger('click')
+    await wrapper.find('form').trigger('submit.prevent')
     expect(declareAssertion).toBeCalled()
   })
 })
@@ -198,9 +200,21 @@ describe('methods: removeAssumption', () => {
 describe('methods: declareAssertion', () => {
   it('emits the declare event with the full assertion object', () => {
     const wrapper = shallowMount(AssertionCreator, {
-      data: () => ({ conclusionString: 'P>Q' })
+      data: () => ({
+        assumptionStringList: ['P>Q', 'P'],
+        conclusionString: 'Q'
+      })
+    })
+    const assertion = constructAssertion(['P>Q', 'P'], 'Q')
+    wrapper.vm.declareAssertion()
+    expect(wrapper.emitted('declare')[0]).toEqual([assertion])
+  })
+
+  it('does not emit the declare event when assertion calculation throws an error', () => {
+    const wrapper = shallowMount(AssertionCreator, {
+      data: () => ({ conclusionString: 'P>' })
     })
     wrapper.vm.declareAssertion()
-    expect(wrapper.emitted('declare')[0].length).toEqual(1)
+    expect(wrapper.emitted('declare')).toBeFalsy()
   })
 })
