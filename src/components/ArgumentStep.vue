@@ -1,10 +1,10 @@
 <template>
-  <p class="argument-step">
-    <span class="dependencies">{{ step.dependencies.join(',') }}</span>
-    <span class="line">({{ step.line }})</span>
-    <span class="formula"><FormulaSpan :formula="step.formula"></FormulaSpan></span>
-    <span class="notation">{{ step.notation }}</span>
-  </p>
+  <tr class="argument-step">
+    <td class="dependencies">{{ step.dependencies.join(',') }}</td>
+    <td class="line">({{ step.line }})</td>
+    <td class="formula"><FormulaSpan :formula="step.formula"></FormulaSpan></td>
+    <td class="notation">{{ step.notation }}</td>
+  </tr>
 </template>
 
 <script>
@@ -34,7 +34,7 @@ export default {
   .formula {
     flex-grow: 1;
     min-width: 100px;
-    text-align: start;
+    text-align: left;
     padding-right: 16px;
   }
 

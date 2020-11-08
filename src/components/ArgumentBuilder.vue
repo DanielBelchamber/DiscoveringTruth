@@ -1,10 +1,9 @@
 <template>
   <section class="argument-builder">
     <AssertionHeader :assertion="assertion"></AssertionHeader>
-    <!-- TODO: Consider presenting the Argument as a table -->
-    <article class="argument">
+    <table class="argument">
       <ArgumentStep v-for="(step, stepIndex) in argument" :key="stepIndex" :step="step"></ArgumentStep>
-    </article>
+    </table>
 
     <template v-if="!hasSubmitted && addingStep">
       <select class="rule" v-model="rule">
@@ -82,6 +81,10 @@ export default {
 <style lang="scss" scoped>
 .argument-builder button {
   margin: 16px 4px 0;
+}
+
+.argument {
+  display: block;
 }
 
 select.rule {
