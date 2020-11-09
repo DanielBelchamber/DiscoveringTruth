@@ -164,6 +164,54 @@ const validateDI = (step, refStep) => {
   return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
 }
 
+const validateDE = (step, disStep, LAStep, LCStep, RAStep, RCStep) => {
+  // validate the formula relationship
+  if (disStep.formula.type !== FORMULA_TYPE.DISJUNCTION) {
+    throw new Error('Reference 1 is not a disjunction.')
+  }
+  const left = parseFormulaString(disStep.formula.left.string)
+  const right = parseFormulaString(disStep.formula.right.string)
+  if (LAStep.formula.string !== left.string) {
+    throw new Error('Left Assumption (reference 2) does not match the disjunction.')
+  } else if (LAStep.notation !== 'A') {
+    throw new Error('Left Assumption (reference 2) is not an assumption.')
+  } else if (step.formula.string !== LCStep.formula.string) {
+    throw new Error('Left Conclusion (reference 3) is not the equivalent to step formula.')
+  } else if (RAStep.formula.string !== right.string) {
+    throw new Error('Right Assumption (reference 4) does not match the disjunction.')
+  } else if (RAStep.notation !== 'A') {
+    throw new Error('Right Assumption (reference 4) is not an assumption.')
+  } else if (step.formula.string !== RCStep.formula.string) {
+    throw new Error('Right Conclusion (reference 5) is not the equivalent to step formula.')
+  }
+  // validate dependency chain
+  const leftIndex = LCStep.dependencies.indexOf(LAStep.line)
+  const rightIndex = RCStep.dependencies.indexOf(RAStep.line)
+  if (disStep.dependencies.indexOf(LAStep.line) !== -1) {
+    throw new Error('Disjunction (reference 1) incorrectly depend on Left Assumption (reference 2).')
+  } else if (disStep.dependencies.indexOf(RAStep.line) !== -1) {
+    throw new Error('Disjunction (reference 1) incorrectly depend on Right Assumption (reference 4).')
+  } else if (leftIndex === -1) {
+    throw new Error('Left Conclusion (reference 3) does not depend on Left Assumption (reference 2).')
+  } else if (LCStep.dependencies.indexOf(RAStep.line) !== -1) {
+    throw new Error('Left Conclusion (reference 3) incorrectly depends on Right Assumption (reference 4).')
+  } else if (rightIndex === -1) {
+    throw new Error('Right Conclusion (reference 5) does not depend on Right Assumption (reference 4).')
+  } else if (RCStep.dependencies.indexOf(LAStep.line) !== -1) {
+    throw new Error('Right Conclusion (reference 5) incorrectly depends on Left Assumption (reference 2).')
+  }
+  const leftDependencies = [...LCStep.dependencies]
+  leftDependencies.splice(leftIndex, 1)
+  const rightDependencies = [...RCStep.dependencies]
+  rightDependencies.splice(rightIndex, 1)
+  const referenceDependencySet = new Set([
+    ...disStep.dependencies,
+    ...leftDependencies,
+    ...rightDependencies
+  ])
+  return validateDependencyChain(step.dependencies, referenceDependencySet)
+}
+
 export const DERIVATION_RULES = [
   {
     name: 'Rule of Assumptions (A)',
@@ -189,28 +237,28 @@ export const DERIVATION_RULES = [
   {
     name: 'Modus Ponendo Ponens (MPP)',
     type: 'MPP',
-    getNotation: (impLine, antLine) => `${impLine},${antLine} MPP`,
+    getNotation: (imp, ant) => `${imp},${ant} MPP`,
     matchNotation: notation => notation.match(/^\d+(,)\d+( MPP)$/),
     validate: validateMPP
   },
   {
     name: 'Modus Tollendo Tollens (MTT)',
     type: 'MTT',
-    getNotation: (impLine, notConLine) => `${impLine},${notConLine} MTT`,
+    getNotation: (imp, notCon) => `${imp},${notCon} MTT`,
     matchNotation: notation => notation.match(/^\d+(,)\d+( MTT)$/),
     validate: validateMTT
   },
   {
     name: 'Conditional Proof (CP)',
     type: 'CP',
-    getNotation: (antLine, conLine) => `${antLine},${conLine} CP`,
+    getNotation: (ant, con) => `${ant},${con} CP`,
     matchNotation: notation => notation.match(/^\d+(,)\d+( CP)$/),
     validate: validateCP
   },
   {
     name: 'Conjunction Introduction (CI)',
     type: 'CI',
-    getNotation: (leftLine, rightLine) => `${leftLine},${rightLine} CI`,
+    getNotation: (left, right) => `${left},${right} CI`,
     matchNotation: notation => notation.match(/^\d+(,)\d+( CI)$/),
     validate: validateCI
   },
@@ -227,6 +275,13 @@ export const DERIVATION_RULES = [
     getNotation: line => `${line} DI`,
     matchNotation: notation => notation.match(/^\d+( DI)$/),
     validate: validateDI
+  },
+  {
+    name: 'Disjunction Elimination (DE)',
+    type: 'DE',
+    getNotation: (dis, LA, LC, RA, RC) => `${dis},${LA},${LC},${RA},${RC} DE`,
+    matchNotation: notation => notation.match(/^\d+(,)\d+(,)\d+(,)\d+(,)\d+( DE)$/),
+    validate: validateDE
   }
 ]
 

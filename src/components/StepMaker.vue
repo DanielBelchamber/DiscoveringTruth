@@ -74,6 +74,14 @@ export default {
             { id: 'left', label: 'Left Step:', value: null },
             { id: 'right', label: 'Right Step:', value: null }
           ]
+        case 'DE':
+          return [
+            { id: 'disjunction', label: 'Disjunction Step:', value: null },
+            { id: 'leftAssumption', label: 'Left Assumption Step:', value: null },
+            { id: 'leftConclusion', label: 'Left Conclusion Step:', value: null },
+            { id: 'rightAssumption', label: 'Right Assumption Step:', value: null },
+            { id: 'rightConclusion', label: 'Right Conclusion Step:', value: null }
+          ]
       }
     }
   },
@@ -93,14 +101,27 @@ export default {
       } else if (rule.type === 'CP') {
         const referenceNumbers = this.referenceList.map(r => r.value)
         step.notation = rule.getNotation(...referenceNumbers)
-        const ref0 = argument[referenceNumbers[0] - 1]
-        const ref1 = argument[referenceNumbers[1] - 1]
-        step.dependencies = [...ref1.dependencies]
-        const depIndex = ref1.dependencies.indexOf(ref0.line)
-        if (depIndex !== -1) {
-          step.dependencies.splice(depIndex, 1)
-        }
-      } else { // DNI, DNE, MPP, MTT
+        const antecedent = argument[referenceNumbers[0] - 1]
+        const consequent = argument[referenceNumbers[1] - 1]
+        step.dependencies = [...consequent.dependencies]
+        const depIndex = step.dependencies.indexOf(antecedent.line)
+        step.dependencies.splice(depIndex, 1)
+      } else if (rule.type === 'DE') {
+        const referenceNumbers = this.referenceList.map(r => r.value)
+        step.notation = rule.getNotation(...referenceNumbers)
+        const disjunction = argument[referenceNumbers[0] - 1]
+        const leftA = argument[referenceNumbers[1] - 1]
+        const leftC = argument[referenceNumbers[2] - 1]
+        const leftDeps = [...leftC.dependencies]
+        leftDeps.splice(leftC.dependencies.indexOf(leftA.line), 1)
+        const rightA = argument[referenceNumbers[3] - 1]
+        const rightC = argument[referenceNumbers[4] - 1]
+        const rightDeps = [...rightC.dependencies]
+        rightDeps.splice(rightC.dependencies.indexOf(rightA.line), 1)
+        step.dependencies = [
+          ...new Set([disjunction.dependencies, leftDeps, rightDeps].flat())
+        ].sort()
+      } else { // DNI, DNE, MPP, MTT, CI, CE, DI
         const referenceNumbers = this.referenceList.map(r => r.value)
         step.notation = rule.getNotation(...referenceNumbers)
         step.dependencies = [

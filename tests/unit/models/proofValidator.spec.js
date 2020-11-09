@@ -98,9 +98,9 @@ describe('validateProof', () => {
 })
 
 describe('DERIVATION_RULES', () => {
-  it('include: A, DNI, DNE, MPP, MTT, CP, CI, CE, DI', () => {
+  it('include: A, DNI, DNE, MPP, MTT, CP, CI, CE, DI, DE', () => {
     expect(DERIVATION_RULES.map(r => r.type))
-      .toEqual(['A', 'DNI', 'DNE', 'MPP', 'MTT', 'CP', 'CI', 'CE', 'DI'])
+      .toEqual(['A', 'DNI', 'DNE', 'MPP', 'MTT', 'CP', 'CI', 'CE', 'DI', 'DE'])
   })
 })
 
