@@ -79,12 +79,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.argument-builder button {
-  margin: 16px 4px 0;
-}
+.argument-builder {
+  table.argument {
+    margin: 0 auto;
+  }
 
-.argument {
-  display: block;
+  button {
+    margin: 16px 4px 0;
+  }
 }
 
 select.rule {

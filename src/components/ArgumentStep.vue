@@ -20,26 +20,14 @@ export default {
 
 <style lang="scss" scoped>
 .argument-step {
-  display: flex;
-  margin: 4px 0;
-
-  .dependencies {
-    width: 50px;
-  }
-
-  .line {
-    width: 40px;
+  td {
+    padding: 4px 8px;
+    text-align: center;
   }
 
   .formula {
-    flex-grow: 1;
     min-width: 100px;
     text-align: left;
-    padding-right: 16px;
-  }
-
-  .notation {
-    width: 80px;
   }
 }
 </style>

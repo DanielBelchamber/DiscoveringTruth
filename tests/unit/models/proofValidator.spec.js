@@ -420,17 +420,10 @@ describe('Modus Ponendo Ponens (MTT)', () => {
 describe('Conditional Proof (CP)', () => {
   const ruleCP = DERIVATION_RULES.find(r => r.type === 'CP')
 
-  const consequentStep = {
+  const assumption1P = {
     dependencies: [1],
     line: 1,
     formula: parseFormulaString('P'),
-    notation: 'A'
-  }
-
-  const antecedentStep = {
-    dependencies: [2],
-    line: 2,
-    formula: parseFormulaString('Q'),
     notation: 'A'
   }
 
@@ -439,13 +432,6 @@ describe('Conditional Proof (CP)', () => {
     line: 2,
     formula: parseFormulaString('P>P'),
     notation: '1,1 CP'
-  }
-
-  const cpStep3 = {
-    dependencies: [1],
-    line: 3,
-    formula: parseFormulaString('Q>P'),
-    notation: '2,1 CP'
   }
 
   it('has the correct name and type', () => {
@@ -459,12 +445,47 @@ describe('Conditional Proof (CP)', () => {
     expect(ruleCP.matchNotation('CP 3,4')).toBeFalsy()
   })
 
-  it('validates a correct CP step with independent antecedent introduction', () => {
-    expect(ruleCP.validate(cpStep3, antecedentStep, consequentStep)).toBeTruthy()
+  it('validates a correct CP step', () => {
+    const antStep = {
+      dependencies: [2],
+      line: 2,
+      formula: parseFormulaString('-Q'),
+      notation: 'A'
+    }
+    const conStep = {
+      dependencies: [1, 2],
+      line: 3,
+      formula: parseFormulaString('-P'),
+      notation: '1,2 MTT' // (1) P>Q
+    }
+    const step = {
+      dependencies: [1],
+      line: 4,
+      formula: parseFormulaString('-Q>(-P)'),
+      notation: '2,3 CP'
+    }
+    expect(ruleCP.validate(step, antStep, conStep)).toBeTruthy()
   })
 
-  it('validates a correct CP step with dependency ejection', () => {
-    expect(ruleCP.validate(cpStep2, consequentStep, consequentStep)).toBeTruthy()
+  it('validates a correct CP step with double reference', () => {
+    expect(ruleCP.validate(cpStep2, assumption1P, assumption1P)).toBeTruthy()
+  })
+
+  it('throws an error when first reference is not a dependency of the second', () => {
+    const antecedentStep = {
+      dependencies: [2],
+      line: 2,
+      formula: parseFormulaString('Q'),
+      notation: 'A'
+    }
+    const cpStep = {
+      dependencies: [1],
+      line: 3,
+      formula: parseFormulaString('Q>P'),
+      notation: '2,1 CP'
+    }
+    expect(() => { ruleCP.validate(cpStep, antecedentStep, assumption1P) })
+      .toThrowError('First reference must be a dependency of the second reference.')
   })
 
   it('throws an error when first reference is not an assumption', () => {
@@ -474,51 +495,40 @@ describe('Conditional Proof (CP)', () => {
       formula: parseFormulaString('P'),
       notation: '3,4 MPP'
     }
-    expect(() => { ruleCP.validate(cpStep2, antStep, consequentStep) })
+    expect(() => { ruleCP.validate(cpStep2, antStep, assumption1P) })
       .toThrowError('First reference must be an assumption.')
   })
 
   it('throws an error when first reference is not the antecedent of the step', () => {
     const step = {
-      dependencies: [1],
-      line: 3,
+      dependencies: [],
+      line: 2,
       formula: parseFormulaString('R>P'),
-      notation: '2,1 CP'
+      notation: '1,1 CP'
     }
-    expect(() => { ruleCP.validate(step, antecedentStep, consequentStep) })
+    expect(() => { ruleCP.validate(step, assumption1P, assumption1P) })
       .toThrowError('First reference is not the antecedent of step formula.')
   })
 
   it('throws an error when second reference is not the consequent of the step', () => {
     const step = {
-      dependencies: [1],
-      line: 3,
-      formula: parseFormulaString('Q>S'),
-      notation: '2,1 CP'
+      dependencies: [],
+      line: 2,
+      formula: parseFormulaString('P>Q'),
+      notation: '1,1 CP'
     }
-    expect(() => { ruleCP.validate(step, antecedentStep, consequentStep) })
+    expect(() => { ruleCP.validate(step, assumption1P, assumption1P) })
       .toThrowError('Second reference is not the consequent of step formula.')
   })
 
-  it('throws an error when independent antecedent introduction dependencies are incorrect', () => {
-    const step = {
-      dependencies: [1, 2],
-      line: 3,
-      formula: parseFormulaString('Q>P'),
-      notation: '2,1 CP'
-    }
-    expect(() => { ruleCP.validate(step, antecedentStep, consequentStep) })
-      .toThrowError('Dependencies are incorrect.')
-  })
-
-  it('throws an error when dependency ejection dependencies are incorrect', () => {
+  it('throws an error when dependencies are incorrect', () => {
     const step = {
       dependencies: [1],
       line: 2,
       formula: parseFormulaString('P>P'),
       notation: '1,1 CP'
     }
-    expect(() => { ruleCP.validate(step, consequentStep, consequentStep) })
+    expect(() => { ruleCP.validate(step, assumption1P, assumption1P) })
       .toThrowError('Dependencies are incorrect.')
   })
 })

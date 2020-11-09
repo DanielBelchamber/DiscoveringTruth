@@ -97,6 +97,9 @@ const validateDNE = (step, refStep) => {
 
 const validateCP = (step, antStep, conStep) => {
   const dependencyIndex = conStep.dependencies.indexOf(antStep.line)
+  if (dependencyIndex === -1) {
+    throw new Error('First reference must be a dependency of the second reference.')
+  }
   // ensure first reference is an assumption
   if (antStep.notation !== 'A') {
     throw new Error('First reference must be an assumption.')
@@ -109,9 +112,7 @@ const validateCP = (step, antStep, conStep) => {
   }
   // validate dependency relationship
   const dependencies = [...conStep.dependencies]
-  if (dependencyIndex !== -1) {
-    dependencies.splice(dependencyIndex, 1)
-  }
+  dependencies.splice(dependencyIndex, 1) // discharged assumption
   if (dependencies.join(',') !== step.dependencies.join(',')) {
     throw new Error('Dependencies are incorrect.')
   }
