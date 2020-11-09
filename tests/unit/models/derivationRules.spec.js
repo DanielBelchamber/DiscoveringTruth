@@ -674,3 +674,159 @@ describe('Disjunction Introduction (DI)', () => {
       .toThrowError('Dependencies are incorrect.')
   })
 })
+
+describe('Disjunction Elimination (DE)', () => {
+  const ruleDE = DERIVATION_RULES.find(r => r.type === 'DE')
+
+  const validArgument = [
+    {
+      dependencies: [1],
+      line: 1,
+      formula: parseFormulaString('PvQ'),
+      notation: 'A'
+    },
+    {
+      dependencies: [2],
+      line: 2,
+      formula: parseFormulaString('P'),
+      notation: 'A'
+    },
+    {
+      dependencies: [2],
+      line: 3,
+      formula: parseFormulaString('QvP'),
+      notation: '2 DI'
+    },
+    {
+      dependencies: [4],
+      line: 4,
+      formula: parseFormulaString('Q'),
+      notation: 'A'
+    },
+    {
+      dependencies: [4],
+      line: 5,
+      formula: parseFormulaString('QvP'),
+      notation: '4 DI'
+    },
+    {
+      dependencies: [1],
+      line: 6,
+      formula: parseFormulaString('QvP'),
+      notation: '1,2,3,4,5 DE'
+    }
+  ]
+
+  it('has the correct name and type', () => {
+    expect(ruleDE.name).toBe('Disjunction Elimination (DE)')
+    expect(ruleDE.type).toBe('DE')
+  })
+
+  it('has functional notation getter and matcher', () => {
+    expect(ruleDE.getNotation(2, 5, 8, 12, 25)).toBe('2,5,8,12,25 DE')
+    expect(ruleDE.matchNotation('1,4,5,2,3 DE')).toBeTruthy()
+    expect(ruleDE.matchNotation('1 DE 3,4,5,6')).toBeFalsy()
+  })
+
+  it('validates a correct DE step', () => {
+    expect(ruleDE.validate(validArgument[5], ...validArgument.slice(0, 5))).toBeTruthy()
+  })
+
+  it('throws an error when ref 1 is not a disjunction', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[0].formula = parseFormulaString('R&S')
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Reference 1 is not a disjunction.')
+  })
+
+  it('throws an error when ref 2 is not the left formula', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[0].formula = parseFormulaString('RvS')
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Left Assumption (reference 2) does not match the disjunction.')
+  })
+
+  it('throws an error when ref 2 is not an assumption', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[1].notation = '1 DNI'
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Left Assumption (reference 2) is not an assumption.')
+  })
+
+  it('throws an error when ref 3 does not match step', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[2].formula = parseFormulaString('RvS')
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Left Conclusion (reference 3) is not the equivalent to step formula.')
+  })
+
+  it('throws an error when ref 4 is not the right formula', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[0].formula = parseFormulaString('PvS')
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Right Assumption (reference 4) does not match the disjunction.')
+  })
+
+  it('throws an error when ref 4 is not an assumption', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[3].notation = '1,2 CP'
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Right Assumption (reference 4) is not an assumption.')
+  })
+
+  it('throws an error when ref 5 does not match step', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[4].formula = parseFormulaString('RvS')
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Right Conclusion (reference 5) is not the equivalent to step formula.')
+  })
+
+  it('throws an error when ref 1 depends on ref 2', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[0].dependencies.push(2)
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Disjunction (reference 1) incorrectly depends on Left Assumption (reference 2).')
+  })
+
+  it('throws an error when ref 1 depends on ref 4', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[0].dependencies.push(4)
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Disjunction (reference 1) incorrectly depends on Right Assumption (reference 4).')
+  })
+
+  it('throws an error when ref 3 does not depend on ref 2', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[2].dependencies = []
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Left Conclusion (reference 3) does not depend on Left Assumption (reference 2).')
+  })
+
+  it('throws an error when ref 3 depends on ref 4', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[2].dependencies = [2, 4]
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Left Conclusion (reference 3) incorrectly depends on Right Assumption (reference 4).')
+  })
+
+  it('throws an error when ref 5 does not depend on ref 4', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[4].dependencies = []
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Right Conclusion (reference 5) does not depend on Right Assumption (reference 4).')
+  })
+
+  it('throws an error when ref 5 depends on ref 2', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[4].dependencies = [2, 4]
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Right Conclusion (reference 5) incorrectly depends on Left Assumption (reference 2).')
+  })
+
+  it('throws an error when step dependencies are incorrect', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[5].dependencies = [2, 4]
+    expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Dependencies are incorrect.')
+  })
+})

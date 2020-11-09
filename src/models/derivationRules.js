@@ -188,9 +188,9 @@ const validateDE = (step, disStep, LAStep, LCStep, RAStep, RCStep) => {
   const leftIndex = LCStep.dependencies.indexOf(LAStep.line)
   const rightIndex = RCStep.dependencies.indexOf(RAStep.line)
   if (disStep.dependencies.indexOf(LAStep.line) !== -1) {
-    throw new Error('Disjunction (reference 1) incorrectly depend on Left Assumption (reference 2).')
+    throw new Error('Disjunction (reference 1) incorrectly depends on Left Assumption (reference 2).')
   } else if (disStep.dependencies.indexOf(RAStep.line) !== -1) {
-    throw new Error('Disjunction (reference 1) incorrectly depend on Right Assumption (reference 4).')
+    throw new Error('Disjunction (reference 1) incorrectly depends on Right Assumption (reference 4).')
   } else if (leftIndex === -1) {
     throw new Error('Left Conclusion (reference 3) does not depend on Left Assumption (reference 2).')
   } else if (LCStep.dependencies.indexOf(RAStep.line) !== -1) {
