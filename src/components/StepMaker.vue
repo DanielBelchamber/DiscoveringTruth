@@ -50,6 +50,7 @@ export default {
         case 'DNI':
         case 'DNE':
         case 'CE':
+        case 'DI':
           return [
             { id: 'reference', label: 'Reference Step:', value: null }
           ]

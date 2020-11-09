@@ -98,9 +98,9 @@ describe('validateProof', () => {
 })
 
 describe('DERIVATION_RULES', () => {
-  it('include: A, DNI, DNE, MPP, MTT, CP, CI, CE', () => {
+  it('include: A, DNI, DNE, MPP, MTT, CP, CI, CE, DI', () => {
     expect(DERIVATION_RULES.map(r => r.type))
-      .toEqual(['A', 'DNI', 'DNE', 'MPP', 'MTT', 'CP', 'CI', 'CE'])
+      .toEqual(['A', 'DNI', 'DNE', 'MPP', 'MTT', 'CP', 'CI', 'CE', 'DI'])
   })
 })
 
@@ -470,6 +470,33 @@ describe('Conditional Proof (CP)', () => {
     expect(ruleCP.validate(cpStep2, assumption1P, assumption1P)).toBeTruthy()
   })
 
+  it('throws an error when the step formula is not an implication', () => {
+    expect(() => { ruleCP.validate(assumption1P, assumption1P, assumption1P) })
+      .toThrowError('Step formula is not an implication.')
+  })
+
+  it('throws an error when first reference is not the antecedent of the step', () => {
+    const step = {
+      dependencies: [],
+      line: 2,
+      formula: parseFormulaString('R>P'),
+      notation: '1,1 CP'
+    }
+    expect(() => { ruleCP.validate(step, assumption1P, assumption1P) })
+      .toThrowError('First reference is not the antecedent of step formula.')
+  })
+
+  it('throws an error when second reference is not the consequent of the step', () => {
+    const step = {
+      dependencies: [],
+      line: 2,
+      formula: parseFormulaString('P>Q'),
+      notation: '1,1 CP'
+    }
+    expect(() => { ruleCP.validate(step, assumption1P, assumption1P) })
+      .toThrowError('Second reference is not the consequent of step formula.')
+  })
+
   it('throws an error when first reference is not a dependency of the second', () => {
     const antecedentStep = {
       dependencies: [2],
@@ -496,28 +523,6 @@ describe('Conditional Proof (CP)', () => {
     }
     expect(() => { ruleCP.validate(cpStep2, antStep, assumption1P) })
       .toThrowError('First reference must be an assumption.')
-  })
-
-  it('throws an error when first reference is not the antecedent of the step', () => {
-    const step = {
-      dependencies: [],
-      line: 2,
-      formula: parseFormulaString('R>P'),
-      notation: '1,1 CP'
-    }
-    expect(() => { ruleCP.validate(step, assumption1P, assumption1P) })
-      .toThrowError('First reference is not the antecedent of step formula.')
-  })
-
-  it('throws an error when second reference is not the consequent of the step', () => {
-    const step = {
-      dependencies: [],
-      line: 2,
-      formula: parseFormulaString('P>Q'),
-      notation: '1,1 CP'
-    }
-    expect(() => { ruleCP.validate(step, assumption1P, assumption1P) })
-      .toThrowError('Second reference is not the consequent of step formula.')
   })
 
   it('throws an error when dependencies are incorrect', () => {
@@ -569,6 +574,17 @@ describe('Conjunction Introduction (CI)', () => {
 
   it('validates a correct CI step', () => {
     expect(ruleCI.validate(ciStep, assumptionP, assumptionQ)).toBeTruthy()
+  })
+
+  it('throws an error when the step formula is not a conjunction', () => {
+    const step = {
+      dependencies: [1, 2],
+      line: 3,
+      formula: parseFormulaString('RvS'),
+      notation: '1,2 CI'
+    }
+    expect(() => { ruleCI.validate(step, assumptionP, assumptionQ) })
+      .toThrowError('Step formula is not a conjunction.')
   })
 
   it('throws an error when the step formula is not the conjunction of the references', () => {
@@ -646,6 +662,17 @@ describe('Conjunction Elimination (CE)', () => {
     expect(ruleCE.validate(step, conjunctionAssumption)).toBeTruthy()
   })
 
+  it('throws an error when the reference formula is not a conjunction', () => {
+    const step = {
+      dependencies: [1],
+      line: 5,
+      formula: parseFormulaString('R'),
+      notation: '1 CE'
+    }
+    expect(() => { ruleCE.validate(step, step) })
+      .toThrowError('Reference formula is not a conjunction.')
+  })
+
   it('throws an error when the step formula is not contained within the reference conjunction', () => {
     const step = {
       dependencies: [1],
@@ -665,6 +692,81 @@ describe('Conjunction Elimination (CE)', () => {
       notation: '1 CE'
     }
     expect(() => { ruleCE.validate(step, conjunctionAssumption) })
+      .toThrowError('Dependencies are incorrect.')
+  })
+})
+
+describe('Disjunction Introduction (DI)', () => {
+  const ruleDI = DERIVATION_RULES.find(r => r.type === 'DI')
+
+  const assumptionP = {
+    dependencies: [1],
+    line: 1,
+    formula: parseFormulaString('P'),
+    notation: 'A'
+  }
+
+  it('has the correct name and type', () => {
+    expect(ruleDI.name).toBe('Disjunction Introduction (DI)')
+    expect(ruleDI.type).toBe('DI')
+  })
+
+  it('has functional notation getter and matcher', () => {
+    expect(ruleDI.getNotation(4)).toBe('4 DI')
+    expect(ruleDI.matchNotation('28 DI')).toBeTruthy()
+    expect(ruleDI.matchNotation('DI12')).toBeFalsy()
+  })
+
+  it('validates a correct left DI step', () => {
+    const step = {
+      dependencies: [1],
+      line: 2,
+      formula: parseFormulaString('PvQ'),
+      notation: '1 DI'
+    }
+    expect(ruleDI.validate(step, assumptionP)).toBeTruthy()
+  })
+
+  it('validates a correct right DI step', () => {
+    const step = {
+      dependencies: [1],
+      line: 2,
+      formula: parseFormulaString('QvP'),
+      notation: '1 DI'
+    }
+    expect(ruleDI.validate(step, assumptionP)).toBeTruthy()
+  })
+
+  it('throws an error when the step formula is not a disjunction', () => {
+    const step = {
+      dependencies: [1],
+      line: 2,
+      formula: parseFormulaString('Q&P'),
+      notation: '1 DI'
+    }
+    expect(() => { ruleDI.validate(step, assumptionP) })
+      .toThrowError('Step formula is not a disjunction.')
+  })
+
+  it('throws an error when the reference is not contained within the disjunction', () => {
+    const step = {
+      dependencies: [1],
+      line: 2,
+      formula: parseFormulaString('RvS'),
+      notation: '1 DI'
+    }
+    expect(() => { ruleDI.validate(step, assumptionP) })
+      .toThrowError('Reference is not contained within the disjunction.')
+  })
+
+  it('throws an error when dependencies are incorrect', () => {
+    const step = {
+      dependencies: [],
+      line: 2,
+      formula: parseFormulaString('Pv-S'),
+      notation: '1 DI'
+    }
+    expect(() => { ruleDI.validate(step, assumptionP) })
       .toThrowError('Dependencies are incorrect.')
   })
 })

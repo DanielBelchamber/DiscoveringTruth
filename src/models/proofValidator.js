@@ -29,6 +29,26 @@ const validateDependencyChain = (dependencies, referenceDependencySet) => {
   }
 }
 
+const validateDNI = (step, refStep) => {
+  // validate the formula relationship
+  const doubleNegation = parseFormulaString(`--(${refStep.formula.string})`)
+  if (step.formula.string !== doubleNegation.string) {
+    throw new Error('Step formula is not the double negation of the reference formula.')
+  }
+  // validate dependency chain
+  return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
+}
+
+const validateDNE = (step, refStep) => {
+  // validate the formula relationship
+  const doubleNegation = parseFormulaString(`--(${step.formula.string})`)
+  if (refStep.formula.string !== doubleNegation.string) {
+    throw new Error('The reference formula is not the double negation of step formula.')
+  }
+  // validate dependency chain
+  return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
+}
+
 const validateMPP = (step, impStep, antStep) => {
   // validate the formula relationships
   const implication = impStep.formula
@@ -73,40 +93,21 @@ const validateMTT = (step, impStep, notConStep) => {
   return validateDependencyChain(step.dependencies, referenceDependencySet)
 }
 
-const validateDNI = (step, refStep) => {
-  // validate the formula relationship
-  const doubleNegation = parseFormulaString(`--(${refStep.formula.string})`)
-  if (step.formula.string !== doubleNegation.string) {
-    throw new Error('Step formula is not the double negation of the reference formula.')
-  }
-  // validate dependency chain
-  return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
-}
-
-const validateDNE = (step, refStep) => {
-  // validate the formula relationship
-  const doubleNegation = parseFormulaString(`--(${step.formula.string})`)
-  if (refStep.formula.string !== doubleNegation.string) {
-    throw new Error('The reference formula is not the double negation of step formula.')
-  }
-  // validate dependency chain
-  return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
-}
-
 const validateCP = (step, antStep, conStep) => {
+  // validate the formula relationship
+  if (step.formula.type !== FORMULA_TYPE.IMPLICATION) {
+    throw new Error('Step formula is not an implication.')
+  } else if (parseFormulaString(step.formula.left.string).string !== antStep.formula.string) {
+    throw new Error('First reference is not the antecedent of step formula.')
+  } else if (parseFormulaString(step.formula.right.string).string !== conStep.formula.string) {
+    throw new Error('Second reference is not the consequent of step formula.')
+  }
   // ensure first reference is an assumption that the second reference depends on
   const dependencyIndex = conStep.dependencies.indexOf(antStep.line)
   if (dependencyIndex === -1) {
     throw new Error('First reference must be a dependency of the second reference.')
-  }
-  if (antStep.notation !== 'A') {
+  } else if (antStep.notation !== 'A') {
     throw new Error('First reference must be an assumption.')
-  }
-  // validate the formula relationship
-  if (parseFormulaString(step.formula.left.string).string !== antStep.formula.string) {
-    throw new Error('First reference is not the antecedent of step formula.')
-  } else if (parseFormulaString(step.formula.right.string).string !== conStep.formula.string) {
-    throw new Error('Second reference is not the consequent of step formula.')
   }
   // validate dependency relationship
   const dependencies = [...conStep.dependencies]
@@ -119,6 +120,9 @@ const validateCP = (step, antStep, conStep) => {
 
 const validateCI = (step, leftStep, rightStep) => {
   // validate the formula relationship
+  if (step.formula.type !== FORMULA_TYPE.CONJUNCTION) {
+    throw new Error('Step formula is not a conjunction.')
+  }
   const left = parseFormulaString(step.formula.left.string)
   const right = parseFormulaString(step.formula.right.string)
   if (leftStep.formula.string !== left.string || rightStep.formula.string !== right.string) {
@@ -134,10 +138,27 @@ const validateCI = (step, leftStep, rightStep) => {
 
 const validateCE = (step, refStep) => {
   // validate the formula relationship
+  if (refStep.formula.type !== FORMULA_TYPE.CONJUNCTION) {
+    throw new Error('Reference formula is not a conjunction.')
+  }
   const left = parseFormulaString(refStep.formula.left.string)
   const right = parseFormulaString(refStep.formula.right.string)
   if (step.formula.string !== left.string && step.formula.string !== right.string) {
     throw new Error('Step formula is not contained within the reference conjunction.')
+  }
+  // validate dependency chain
+  return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
+}
+
+const validateDI = (step, refStep) => {
+  // validate the formula relationship
+  if (step.formula.type !== FORMULA_TYPE.DISJUNCTION) {
+    throw new Error('Step formula is not a disjunction.')
+  }
+  const left = parseFormulaString(step.formula.left.string)
+  const right = parseFormulaString(step.formula.right.string)
+  if (refStep.formula.string !== left.string && refStep.formula.string !== right.string) {
+    throw new Error('Reference is not contained within the disjunction.')
   }
   // validate dependency chain
   return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
@@ -199,6 +220,13 @@ export const DERIVATION_RULES = [
     getNotation: line => `${line} CE`,
     matchNotation: notation => notation.match(/^\d+( CE)$/),
     validate: validateCE
+  },
+  {
+    name: 'Disjunction Introduction (DI)',
+    type: 'DI',
+    getNotation: line => `${line} DI`,
+    matchNotation: notation => notation.match(/^\d+( DI)$/),
+    validate: validateDI
   }
 ]
 
