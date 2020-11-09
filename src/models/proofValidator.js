@@ -42,7 +42,6 @@ const validateMPP = (step, impStep, antStep) => {
   } else if (step.formula.string !== consequent.string) {
     throw new Error('Step is not the consequent of the implecation.')
   }
-
   // validate dependency chain
   const referenceDependencySet = new Set([
     ...impStep.dependencies,
@@ -66,7 +65,6 @@ const validateMTT = (step, impStep, notConStep) => {
   } else if (step.formula.string !== notAntecedent.string) {
     throw new Error('Step is not the negation of the antecedent of the implecation.')
   }
-
   // validate dependency chain
   const referenceDependencySet = new Set([
     ...impStep.dependencies,
@@ -96,11 +94,11 @@ const validateDNE = (step, refStep) => {
 }
 
 const validateCP = (step, antStep, conStep) => {
+  // ensure first reference is an assumption that the second reference depends on
   const dependencyIndex = conStep.dependencies.indexOf(antStep.line)
   if (dependencyIndex === -1) {
     throw new Error('First reference must be a dependency of the second reference.')
   }
-  // ensure first reference is an assumption
   if (antStep.notation !== 'A') {
     throw new Error('First reference must be an assumption.')
   }
@@ -117,6 +115,32 @@ const validateCP = (step, antStep, conStep) => {
     throw new Error('Dependencies are incorrect.')
   }
   return true
+}
+
+const validateCI = (step, leftStep, rightStep) => {
+  // validate the formula relationship
+  const left = parseFormulaString(step.formula.left.string)
+  const right = parseFormulaString(step.formula.right.string)
+  if (leftStep.formula.string !== left.string || rightStep.formula.string !== right.string) {
+    throw new Error('References do not match the conjunction.')
+  }
+  // validate dependency chain
+  const referenceDependencySet = new Set([
+    ...leftStep.dependencies,
+    ...rightStep.dependencies
+  ])
+  return validateDependencyChain(step.dependencies, referenceDependencySet)
+}
+
+const validateCE = (step, refStep) => {
+  // validate the formula relationship
+  const left = parseFormulaString(refStep.formula.left.string)
+  const right = parseFormulaString(refStep.formula.right.string)
+  if (step.formula.string !== left.string && step.formula.string !== right.string) {
+    throw new Error('Step formula does not match the reference conjunction.')
+  }
+  // validate dependency chain
+  return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
 }
 
 export const DERIVATION_RULES = [
@@ -161,6 +185,20 @@ export const DERIVATION_RULES = [
     getNotation: (antLine, conLine) => `${antLine},${conLine} CP`,
     matchNotation: notation => notation.match(/^\d+(,)\d+( CP)$/),
     validate: validateCP
+  },
+  {
+    name: 'Conjunction Introduction (CI)',
+    type: 'CI',
+    getNotation: (leftLine, rightLine) => `${leftLine},${rightLine} CI`,
+    matchNotation: notation => notation.match(/^\d+(,)\d+( CI)$/),
+    validate: validateCI
+  },
+  {
+    name: 'Conjunction Elimination (CE)',
+    type: 'CE',
+    getNotation: line => `${line} CE`,
+    matchNotation: notation => notation.match(/^\d+( CE)$/),
+    validate: validateCE
   }
 ]
 

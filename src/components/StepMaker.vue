@@ -49,6 +49,7 @@ export default {
           return []
         case 'DNI':
         case 'DNE':
+        case 'CE':
           return [
             { id: 'reference', label: 'Reference Step:', value: null }
           ]
@@ -66,6 +67,11 @@ export default {
           return [
             { id: 'antecedent', label: 'Antecedent Assumption Step:', value: null },
             { id: 'consequent', label: 'Consequent Step:', value: null }
+          ]
+        case 'CI':
+          return [
+            { id: 'left', label: 'Left Step:', value: null },
+            { id: 'right', label: 'Right Step:', value: null }
           ]
       }
     }
