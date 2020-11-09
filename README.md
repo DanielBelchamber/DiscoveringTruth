@@ -17,3 +17,8 @@ This is a simple app for working with basic Propositional Logic proof structures
 - Modus Ponendo Ponens (MPP)
 - Modus Tollendo Tollens (MTT)
 - Conditional Proof (CP)
+- Conjunction Introduction (CI)
+- Conjunction Elimination (CE)
+- Disjunction Introduction (DI)
+- Disjunction Elimination (DE)
+- Reductio Ad Absurdum (RAA)
