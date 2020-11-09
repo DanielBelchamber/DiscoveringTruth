@@ -137,7 +137,7 @@ const validateCE = (step, refStep) => {
   const left = parseFormulaString(refStep.formula.left.string)
   const right = parseFormulaString(refStep.formula.right.string)
   if (step.formula.string !== left.string && step.formula.string !== right.string) {
-    throw new Error('Step formula does not match the reference conjunction.')
+    throw new Error('Step formula is not contained within the reference conjunction.')
   }
   // validate dependency chain
   return validateDependencyChain(step.dependencies, new Set(refStep.dependencies))
