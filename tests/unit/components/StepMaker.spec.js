@@ -1,7 +1,7 @@
 import { shallowMount } from '@vue/test-utils'
 import StepMaker from '@/components/StepMaker.vue'
 import { parseFormulaString } from '@/models/formulaParser.js'
-import { DERIVATION_RULES } from '@/models/proofValidator.js'
+import { DERIVATION_RULES } from '@/models/derivationRules.js'
 
 const implicationAssumptionStep = {
   dependencies: [1],

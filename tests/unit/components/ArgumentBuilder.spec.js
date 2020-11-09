@@ -4,7 +4,7 @@ import AssertionHeader from '@/components/AssertionHeader.vue'
 import ArgumentStep from '@/components/ArgumentStep.vue'
 import StepMaker from '@/components/StepMaker.vue'
 import { parseFormulaString } from '@/models/formulaParser.js'
-import { DERIVATION_RULES } from '@/models/proofValidator.js'
+import { DERIVATION_RULES } from '@/models/derivationRules.js'
 
 const simpleArgument = [
   {
