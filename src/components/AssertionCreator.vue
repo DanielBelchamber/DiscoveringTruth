@@ -1,6 +1,5 @@
 <template>
-  <!-- TODO: replace with form -->
-  <section>
+  <form @submit.prevent="declareAssertion">
     <AssertionHeader :assertion="assertion"></AssertionHeader>
     <p class="assumption" v-for="(assumption, index) in assumptionStringList" :key="index">
       <label :for="getAssumptionID(index)">{{ getAssumptionLabel(index) }}</label>
@@ -12,9 +11,9 @@
       <input type="text" id="conclusion" v-model="conclusionString"/>
     </p>
 
-    <button @click="addAssumption" :disabled="atMaxAssumptions">Add Assumption</button>
-    <button @click="declareAssertion" :disabled="!hasConclusion">Declare Assertion</button>
-  </section>
+    <input type="submit" :disabled="!hasConclusion" value="Declare Assertion"/>
+    <button @click="addAssumption">Add Assumption</button>
+  </form>
 </template>
 
 <script>
@@ -27,7 +26,6 @@ export default {
   },
   data () {
     return {
-      assumptionLimit: 5, // hard-coded
       assumptionStringList: [],
       conclusionString: ''
     }
@@ -44,9 +42,6 @@ export default {
           conclusion: null
         }
       }
-    },
-    atMaxAssumptions () {
-      return this.assumptionStringList.length >= this.assumptionLimit
     },
     hasConclusion () {
       return this.assertion.conclusion !== null
@@ -66,7 +61,9 @@ export default {
       this.assumptionStringList.splice(index, 1)
     },
     declareAssertion () {
-      this.$emit('declare', this.assertion)
+      if (this.hasConclusion) {
+        this.$emit('declare', this.assertion)
+      }
     }
   }
 }
