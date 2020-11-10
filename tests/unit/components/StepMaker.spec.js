@@ -1,7 +1,7 @@
 import { shallowMount } from '@vue/test-utils'
 import StepMaker from '@/components/StepMaker.vue'
 import { parseFormulaString } from '@/models/formulaParser.js'
-import { DERIVATION_RULES } from '@/models/proofValidator.js'
+import { DERIVATION_RULES } from '@/models/derivationRules.js'
 
 const implicationAssumptionStep = {
   dependencies: [1],
@@ -147,6 +147,52 @@ describe('computed: referenceList', () => {
     ]
     expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
   })
+
+  it('rule.type === CI: returns configuration for left and right references', () => {
+    const localThis = { rule: DERIVATION_RULES.find(r => r.type === 'CI') }
+    const referenceList = [
+      { id: 'left', label: 'Left Step:', value: null },
+      { id: 'right', label: 'Right Step:', value: null }
+    ]
+    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
+  })
+
+  it('rule.type === CE: returns configuration for the reference', () => {
+    const localThis = { rule: DERIVATION_RULES.find(r => r.type === 'CE') }
+    const referenceList = [
+      { id: 'reference', label: 'Reference Step:', value: null }
+    ]
+    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
+  })
+
+  it('rule.type === DI: returns configuration for the reference', () => {
+    const localThis = { rule: DERIVATION_RULES.find(r => r.type === 'DI') }
+    const referenceList = [
+      { id: 'reference', label: 'Reference Step:', value: null }
+    ]
+    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
+  })
+
+  it('rule.type === DE: returns configuration for all five references', () => {
+    const localThis = { rule: DERIVATION_RULES.find(r => r.type === 'DE') }
+    const referenceList = [
+      { id: 'disjunction', label: 'Disjunction Step:', value: null },
+      { id: 'leftAssumption', label: 'Left Assumption Step:', value: null },
+      { id: 'leftConclusion', label: 'Left Conclusion Step:', value: null },
+      { id: 'rightAssumption', label: 'Right Assumption Step:', value: null },
+      { id: 'rightConclusion', label: 'Right Conclusion Step:', value: null }
+    ]
+    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
+  })
+
+  it('rule.type === RAA: returns configuration for assumption and contradiction references', () => {
+    const localThis = { rule: DERIVATION_RULES.find(r => r.type === 'RAA') }
+    const referenceList = [
+      { id: 'assumption', label: 'Assumption Step:', value: null },
+      { id: 'contradiction', label: 'Contradiction Step:', value: null }
+    ]
+    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
+  })
 })
 
 describe('methods: commit', () => {
@@ -208,41 +254,7 @@ describe('methods: commit', () => {
     expect(wrapper.emitted('commit')[0]).toEqual([mppStep])
   })
 
-  it('emits CP step with independent antecedent introduction', () => {
-    const argument = [
-      {
-        dependencies: [1],
-        line: 1,
-        formula: parseFormulaString('P'),
-        notation: 'A'
-      },
-      {
-        dependencies: [2],
-        line: 2,
-        formula: parseFormulaString('Q'),
-        notation: 'A'
-      }
-    ]
-    const wrapper = shallowMount(StepMaker, {
-      propsData: {
-        argument,
-        rule: DERIVATION_RULES.find(r => r.type === 'CP')
-      },
-      data: () => ({ formulaString: 'Q>P' })
-    })
-    const cpStep = {
-      dependencies: [1],
-      line: 3,
-      formula: parseFormulaString('Q>P'),
-      notation: '2,1 CP'
-    }
-    wrapper.find('input#antecedent').setValue(2)
-    wrapper.find('input#consequent').setValue(1)
-    wrapper.vm.commit()
-    expect(wrapper.emitted('commit')[0]).toEqual([cpStep])
-  })
-
-  it('emits CP step with dependency ejection', () => {
+  it('emits CP step', () => {
     const argument = [
       {
         dependencies: [1],
@@ -268,5 +280,60 @@ describe('methods: commit', () => {
     wrapper.find('input#consequent').setValue(1)
     wrapper.vm.commit()
     expect(wrapper.emitted('commit')[0]).toEqual([cpStep])
+  })
+
+  it('emits DE step', () => {
+    const argument = [
+      {
+        dependencies: [1],
+        line: 1,
+        formula: parseFormulaString('PvQ'),
+        notation: 'A'
+      },
+      {
+        dependencies: [2],
+        line: 2,
+        formula: parseFormulaString('P'),
+        notation: 'A'
+      },
+      {
+        dependencies: [2],
+        line: 3,
+        formula: parseFormulaString('QvP'),
+        notation: '2 DI'
+      },
+      {
+        dependencies: [4],
+        line: 4,
+        formula: parseFormulaString('Q'),
+        notation: 'A'
+      },
+      {
+        dependencies: [4],
+        line: 5,
+        formula: parseFormulaString('QvP'),
+        notation: '4 DI'
+      }
+    ]
+    const wrapper = shallowMount(StepMaker, {
+      propsData: {
+        argument,
+        rule: DERIVATION_RULES.find(r => r.type === 'DE')
+      },
+      data: () => ({ formulaString: 'QvP' })
+    })
+    const deStep = {
+      dependencies: [1],
+      line: 6,
+      formula: parseFormulaString('QvP'),
+      notation: '1,2,3,4,5 DE'
+    }
+    wrapper.find('input#disjunction').setValue(1)
+    wrapper.find('input#leftAssumption').setValue(2)
+    wrapper.find('input#leftConclusion').setValue(3)
+    wrapper.find('input#rightAssumption').setValue(4)
+    wrapper.find('input#rightConclusion').setValue(5)
+    wrapper.vm.commit()
+    expect(wrapper.emitted('commit')[0]).toEqual([deStep])
   })
 })

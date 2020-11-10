@@ -49,6 +49,8 @@ export default {
           return []
         case 'DNI':
         case 'DNE':
+        case 'CE':
+        case 'DI':
           return [
             { id: 'reference', label: 'Reference Step:', value: null }
           ]
@@ -67,6 +69,24 @@ export default {
             { id: 'antecedent', label: 'Antecedent Assumption Step:', value: null },
             { id: 'consequent', label: 'Consequent Step:', value: null }
           ]
+        case 'CI':
+          return [
+            { id: 'left', label: 'Left Step:', value: null },
+            { id: 'right', label: 'Right Step:', value: null }
+          ]
+        case 'DE':
+          return [
+            { id: 'disjunction', label: 'Disjunction Step:', value: null },
+            { id: 'leftAssumption', label: 'Left Assumption Step:', value: null },
+            { id: 'leftConclusion', label: 'Left Conclusion Step:', value: null },
+            { id: 'rightAssumption', label: 'Right Assumption Step:', value: null },
+            { id: 'rightConclusion', label: 'Right Conclusion Step:', value: null }
+          ]
+        case 'RAA':
+          return [
+            { id: 'assumption', label: 'Assumption Step:', value: null },
+            { id: 'contradiction', label: 'Contradiction Step:', value: null }
+          ]
       }
     }
   },
@@ -83,17 +103,30 @@ export default {
       if (rule.type === 'A') {
         step.dependencies = [stepNumber]
         step.notation = rule.getNotation()
-      } else if (rule.type === 'CP') {
+      } else if (rule.type === 'CP' || rule.type === 'RAA') {
         const referenceNumbers = this.referenceList.map(r => r.value)
         step.notation = rule.getNotation(...referenceNumbers)
-        const ref0 = argument[referenceNumbers[0] - 1]
-        const ref1 = argument[referenceNumbers[1] - 1]
-        step.dependencies = [...ref1.dependencies]
-        const depIndex = ref1.dependencies.indexOf(ref0.line)
-        if (depIndex !== -1) {
-          step.dependencies.splice(depIndex, 1)
-        }
-      } else { // DNI, DNE, MPP, MTT
+        const assumption = argument[referenceNumbers[0] - 1]
+        const conclusion = argument[referenceNumbers[1] - 1]
+        step.dependencies = [...conclusion.dependencies]
+        const depIndex = step.dependencies.indexOf(assumption.line)
+        step.dependencies.splice(depIndex, 1)
+      } else if (rule.type === 'DE') {
+        const referenceNumbers = this.referenceList.map(r => r.value)
+        step.notation = rule.getNotation(...referenceNumbers)
+        const disjunction = argument[referenceNumbers[0] - 1]
+        const leftA = argument[referenceNumbers[1] - 1]
+        const leftC = argument[referenceNumbers[2] - 1]
+        const leftDeps = [...leftC.dependencies]
+        leftDeps.splice(leftC.dependencies.indexOf(leftA.line), 1)
+        const rightA = argument[referenceNumbers[3] - 1]
+        const rightC = argument[referenceNumbers[4] - 1]
+        const rightDeps = [...rightC.dependencies]
+        rightDeps.splice(rightC.dependencies.indexOf(rightA.line), 1)
+        step.dependencies = [
+          ...new Set([disjunction.dependencies, leftDeps, rightDeps].flat())
+        ].sort()
+      } else { // DNI, DNE, MPP, MTT, CI, CE, DI
         const referenceNumbers = this.referenceList.map(r => r.value)
         step.notation = rule.getNotation(...referenceNumbers)
         step.dependencies = [
