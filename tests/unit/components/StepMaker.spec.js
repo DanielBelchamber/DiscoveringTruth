@@ -184,6 +184,15 @@ describe('computed: referenceList', () => {
     ]
     expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
   })
+
+  it('rule.type === RAA: returns configuration for assumption and contradiction references', () => {
+    const localThis = { rule: DERIVATION_RULES.find(r => r.type === 'RAA') }
+    const referenceList = [
+      { id: 'assumption', label: 'Assumption Step:', value: null },
+      { id: 'contradiction', label: 'Contradiction Step:', value: null }
+    ]
+    expect(StepMaker.computed.referenceList.call(localThis)).toEqual(referenceList)
+  })
 })
 
 describe('methods: commit', () => {

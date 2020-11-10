@@ -2,9 +2,9 @@ import { DERIVATION_RULES } from '@/models/derivationRules.js'
 import { parseFormulaString } from '@/models/formulaParser.js'
 
 describe('DERIVATION_RULES', () => {
-  it('include: A, DNI, DNE, MPP, MTT, CP, CI, CE, DI, DE', () => {
+  it('include: A, DNI, DNE, MPP, MTT, CP, CI, CE, DI, DE, RAA', () => {
     expect(DERIVATION_RULES.map(r => r.type))
-      .toEqual(['A', 'DNI', 'DNE', 'MPP', 'MTT', 'CP', 'CI', 'CE', 'DI', 'DE'])
+      .toEqual(['A', 'DNI', 'DNE', 'MPP', 'MTT', 'CP', 'CI', 'CE', 'DI', 'DE', 'RAA'])
   })
 })
 
@@ -827,6 +827,111 @@ describe('Disjunction Elimination (DE)', () => {
     const argument = JSON.parse(JSON.stringify(validArgument))
     argument[5].dependencies = [2, 4]
     expect(() => { ruleDE.validate(argument[5], ...argument.slice(0, 5)) })
+      .toThrowError('Dependencies are incorrect.')
+  })
+})
+
+describe('Reductio Ad Absurdum (RAA)', () => {
+  const ruleRAA = DERIVATION_RULES.find(r => r.type === 'RAA')
+
+  const contradiction = {
+    dependencies: [1],
+    line: 1,
+    formula: parseFormulaString('P&-P'),
+    notation: 'A'
+  }
+
+  const double = {
+    dependencies: [],
+    line: 2,
+    formula: parseFormulaString('-(P&-P)'),
+    notation: '1,1 RAA'
+  }
+
+  const validArgument = [
+    {
+      dependencies: [1],
+      line: 1,
+      formula: parseFormulaString('P>(-P)'),
+      notation: 'A'
+    },
+    {
+      dependencies: [2],
+      line: 2,
+      formula: parseFormulaString('P'),
+      notation: 'A'
+    },
+    {
+      dependencies: [1, 2],
+      line: 3,
+      formula: parseFormulaString('-P'),
+      notation: '1,2 MPP'
+    },
+    {
+      dependencies: [1, 2],
+      line: 4,
+      formula: parseFormulaString('P&-P'),
+      notation: '2,3 CI'
+    },
+    {
+      dependencies: [1],
+      line: 5,
+      formula: parseFormulaString('-P'),
+      notation: '2,4 RAA'
+    }
+  ]
+
+  it('has the correct name and type', () => {
+    expect(ruleRAA.name).toBe('Reductio Ad Absurdum (RAA)')
+    expect(ruleRAA.type).toBe('RAA')
+  })
+
+  it('has functional notation getter and matcher', () => {
+    expect(ruleRAA.getNotation(1, 3)).toBe('1,3 RAA')
+    expect(ruleRAA.matchNotation('72,133 RAA')).toBeTruthy()
+    expect(ruleRAA.matchNotation('RAA 3,4')).toBeFalsy()
+  })
+
+  it('validates a correct RAA step', () => {
+    expect(ruleRAA.validate(validArgument[4], validArgument[1], validArgument[3])).toBeTruthy()
+  })
+
+  it('validates a correct RAA step with double reference', () => {
+    expect(ruleRAA.validate(double, contradiction, contradiction)).toBeTruthy()
+  })
+
+  it('throws an error when step is not the negation of ref 1', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[4].formula = parseFormulaString('-Q')
+    expect(() => { ruleRAA.validate(argument[4], argument[1], argument[3]) })
+      .toThrowError('Step is not the negation of the first reference.')
+  })
+
+  it('throws an error when ref 1 is not an assumption', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[1].notation = '1,2,3,4,5 DE'
+    expect(() => { ruleRAA.validate(argument[4], argument[1], argument[3]) })
+      .toThrowError('First reference must be an assumption.')
+  })
+
+  it('throws an error when ref 2 is not a contradiction', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[3].formula = parseFormulaString('P&-Q')
+    expect(() => { ruleRAA.validate(argument[4], argument[1], argument[3]) })
+      .toThrowError('Second reference is not a formal contradiction.')
+  })
+
+  it('throws an error when ref 1 is not a dependency of ref 2', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[3].dependencies = [1]
+    expect(() => { ruleRAA.validate(argument[4], argument[1], argument[3]) })
+      .toThrowError('First reference must be a dependency of the second reference.')
+  })
+
+  it('throws an error when step dependencies are incorrect', () => {
+    const argument = JSON.parse(JSON.stringify(validArgument))
+    argument[4].dependencies = [1, 2]
+    expect(() => { ruleRAA.validate(argument[4], argument[1], argument[3]) })
       .toThrowError('Dependencies are incorrect.')
   })
 })

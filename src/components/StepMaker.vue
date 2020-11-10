@@ -82,6 +82,11 @@ export default {
             { id: 'rightAssumption', label: 'Right Assumption Step:', value: null },
             { id: 'rightConclusion', label: 'Right Conclusion Step:', value: null }
           ]
+        case 'RAA':
+          return [
+            { id: 'assumption', label: 'Assumption Step:', value: null },
+            { id: 'contradiction', label: 'Contradiction Step:', value: null }
+          ]
       }
     }
   },
@@ -98,13 +103,13 @@ export default {
       if (rule.type === 'A') {
         step.dependencies = [stepNumber]
         step.notation = rule.getNotation()
-      } else if (rule.type === 'CP') {
+      } else if (rule.type === 'CP' || rule.type === 'RAA') {
         const referenceNumbers = this.referenceList.map(r => r.value)
         step.notation = rule.getNotation(...referenceNumbers)
-        const antecedent = argument[referenceNumbers[0] - 1]
-        const consequent = argument[referenceNumbers[1] - 1]
-        step.dependencies = [...consequent.dependencies]
-        const depIndex = step.dependencies.indexOf(antecedent.line)
+        const assumption = argument[referenceNumbers[0] - 1]
+        const conclusion = argument[referenceNumbers[1] - 1]
+        step.dependencies = [...conclusion.dependencies]
+        const depIndex = step.dependencies.indexOf(assumption.line)
         step.dependencies.splice(depIndex, 1)
       } else if (rule.type === 'DE') {
         const referenceNumbers = this.referenceList.map(r => r.value)

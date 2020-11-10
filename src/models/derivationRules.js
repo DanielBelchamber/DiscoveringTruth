@@ -97,19 +97,18 @@ const validateCP = (step, antStep, conStep) => {
   // validate the formula relationship
   if (step.formula.type !== FORMULA_TYPE.IMPLICATION) {
     throw new Error('Step formula is not an implication.')
+  } else if (antStep.notation !== 'A') {
+    throw new Error('First reference must be an assumption.')
   } else if (parseFormulaString(step.formula.left.string).string !== antStep.formula.string) {
     throw new Error('First reference is not the antecedent of step formula.')
   } else if (parseFormulaString(step.formula.right.string).string !== conStep.formula.string) {
     throw new Error('Second reference is not the consequent of step formula.')
   }
-  // ensure first reference is an assumption that the second reference depends on
+  // validate dependency relationship
   const dependencyIndex = conStep.dependencies.indexOf(antStep.line)
   if (dependencyIndex === -1) {
     throw new Error('First reference must be a dependency of the second reference.')
-  } else if (antStep.notation !== 'A') {
-    throw new Error('First reference must be an assumption.')
   }
-  // validate dependency relationship
   const dependencies = [...conStep.dependencies]
   dependencies.splice(dependencyIndex, 1) // discharged assumption
   if (dependencies.join(',') !== step.dependencies.join(',')) {
@@ -212,6 +211,32 @@ const validateDE = (step, disStep, LAStep, LCStep, RAStep, RCStep) => {
   return validateDependencyChain(step.dependencies, referenceDependencySet)
 }
 
+const validateRAA = (step, assumptionStep, contradictionStep) => {
+  // validate the formula relationship
+  const assumptionString = parseFormulaString(`-(${assumptionStep.formula.string})`).string
+  if (step.formula.string !== assumptionString) {
+    throw new Error('Step is not the negation of the first reference.')
+  } else if (assumptionStep.notation !== 'A') {
+    throw new Error('First reference must be an assumption.')
+  }
+  const leftString = parseFormulaString(`-(${contradictionStep.formula.left.string})`).string
+  const rightString = parseFormulaString(contradictionStep.formula.right.string).string
+  if (contradictionStep.formula.type !== FORMULA_TYPE.CONJUNCTION || leftString !== rightString) {
+    throw new Error('Second reference is not a formal contradiction.')
+  }
+  // validate dependency relationship
+  const dependencyIndex = contradictionStep.dependencies.indexOf(assumptionStep.line)
+  if (dependencyIndex === -1) {
+    throw new Error('First reference must be a dependency of the second reference.')
+  }
+  const dependencies = [...contradictionStep.dependencies]
+  dependencies.splice(dependencyIndex, 1) // discharged assumption
+  if (dependencies.join(',') !== step.dependencies.join(',')) {
+    throw new Error('Dependencies are incorrect.')
+  }
+  return true
+}
+
 export const DERIVATION_RULES = [
   {
     name: 'Rule of Assumptions (A)',
@@ -282,5 +307,12 @@ export const DERIVATION_RULES = [
     getNotation: (dis, LA, LC, RA, RC) => `${dis},${LA},${LC},${RA},${RC} DE`,
     matchNotation: notation => notation.match(/^\d+(,)\d+(,)\d+(,)\d+(,)\d+( DE)$/),
     validate: validateDE
+  },
+  {
+    name: 'Reductio Ad Absurdum (RAA)',
+    type: 'RAA',
+    getNotation: (assumption, contradiction) => `${assumption},${contradiction} RAA`,
+    matchNotation: notation => notation.match(/^\d+(,)\d+( RAA)$/),
+    validate: validateRAA
   }
 ]
