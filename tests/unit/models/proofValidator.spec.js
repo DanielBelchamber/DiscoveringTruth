@@ -1,4 +1,4 @@
-import { validateProof } from '@/models/proofValidator.js'
+import { validateProof, DERIVATION_RULES } from '@/models/proofValidator.js'
 import { constructAssertion, parseFormulaString } from '@/models/formulaParser.js'
 
 describe('validateProof', () => {
